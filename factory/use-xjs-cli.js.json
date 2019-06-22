@@ -1,11 +1,11 @@
 {
   "development": {
-    "main": "app.js",
+    "main": "{{main}}",
     "server": "nodemon",
     "console": "node"
   },
   "production": {
-    "main": "app.js",
+    "main": "{{main}}",
     "server": "forever start",
     "console": "node"
   },

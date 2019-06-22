@@ -1,11 +1,11 @@
 {
   "development": {
-    "main": "app.ts",
+    "main": "{{main}}",
     "console": "ts-node-dev --transpileOnly",
     "server": "ts-node-dev --respawn --transpileOnly"
   },
   "production": {
-    "main": "dist/app.js",
+    "main": "dist/{{main_to_js}}",
     "console": "node",
     "server": "forever start"
   },

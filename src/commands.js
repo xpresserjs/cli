@@ -1,28 +1,44 @@
-const {cyan, yellow, whiteBright, magenta, red, white, green} = require('chalk');
-const {prompt} = require('inquirer');
+// Import Console Colors
+const {
+    cyan,
+    yellow,
+    whiteBright,
+    red,
+    white,
+    green
+} = require('chalk');
 
+// Import Other Libraries
+const {prompt} = require('inquirer');
 const fs = require('fs');
 const fse = require('fs-extra');
 const path = require('path');
 const mkdirp = require('mkdirp');
 const shell = require('shelljs');
-const _ = require("lodash");
-const ObjectCollection = require("./ObejctCollection");
+const ObjectCollection = require("object-collection");
+const _ = ObjectCollection._;
 
 
-// Xjs npm id
-const xjs = 'xpresser';
+/**
+ * Xjs Npm ID
+ * @type {string}
+ */
+const xpresser = 'xpresser';
 
+
+/**
+ * Set DefaultConfig to provide values for undefined keys.
+ */
 const defaultConfig = {
 
     development: {
-        'main': "app.js",
+        'main': "xpresser.js",
         'console': "node",
         'server': "node",
     },
 
     production: {
-        'main': "app.js",
+        'main': "xpresser.js",
         'console': "node",
         'server': "forever start",
     },
@@ -33,6 +49,8 @@ const defaultConfig = {
 
 /**
  * Get Base path
+ *
+ * Same as current working directory.
  * @param path
  * @return {string|*}
  */
@@ -43,41 +61,70 @@ const basePath = (path = '') => {
     return process.cwd()
 };
 
+
+/**
+ * Xjs Cli Path
+ *
+ * Used to access files where-ever xpresser-cli is installed.
+ * @param $path
+ * @return {string}
+ */
 const cliPath = ($path = '') => {
     return path.resolve(__dirname + '/../' + $path)
 };
 
+
+/**
+ * Simple Log Function
+ * Using Cyan Color
+ * @param args
+ */
 const log = (...args) => {
     args.unshift('=> ');
     console.log(cyan(...args))
 };
 
+
+/**
+ * Error Log Function
+ * Using Red Color
+ * @param args
+ */
 const logError = (...args) => {
-    console.log(red(...args))
+    console.error(red(...args))
 };
 
+
+/**
+ * LogError And Exit
+ *
+ * logs error then exists program.
+ * @param args
+ */
 const logErrorAndExit = (...args) => {
     args.unshift('Error: ');
     logError(...args);
     process.exit();
 };
 
-// const cyanWithBars = (str) => cyan('{' + str.trim() + '}');
+// Define Colors with bars helper function
 const yellowWithBars = (str) => yellow('{' + str.trim() + '}');
 const whiteWithBars = (str) => whiteBright('{' + str.trim() + '}');
-// const magentaWithBars = (str) => magenta('{' + str.trim() + '}');
 const redWithBars = (str) => red('{' + str.trim() + '}');
 
-
+/**
+ * Get current XjsVersion from package.json
+ * @return {string}
+ */
 const currentXjsVersion = () => {
     let packageDotJson = require(basePath('package.json'));
-    let packages = packageDotJson.dependencies;
+    let packages = packageDotJson['dependencies'];
     let packagesKeys = Object.keys(packages);
     let version = '0.0.0';
 
     for (let i = 0; i < packagesKeys.length; i++) {
         const packagesKey = packagesKeys[i];
-        if (packagesKey === xjs) {
+        if (packagesKey === xpresser) {
             version = packages[packagesKey];
             break;
         }
@@ -90,43 +137,77 @@ const currentXjsVersion = () => {
     return version;
 };
 
+/**
+ * Check if xpresser project uses yarn.
+ * @return {boolean}
+ * @constructor
+ */
 const HasYarnLock = () => fs.existsSync(basePath('yarn.lock'));
 
-const updateXjs = () => {
-    let command = `npm install ${xjs} --save --no-audit --silent`;
+
+/**
+ * Update project using yarn or npm
+ * @return {*}
+ */
+const updateXpresser = () => {
+    let command = `npm install ${xpresser} --save --no-audit --silent`
+
     if (HasYarnLock()) {
+
         log('Using Yarn...');
-        command = `yarn add ${xjs} --silent`
+        command = `yarn add ${xpresser} --silent`
+
     } else {
+
         log('Using Npm...');
-        // if NPM remove xjs first
-        shell.exec(`npm remove ${{xjs}}`, {silent: true})
+        // if NPM remove xpresser first
+        shell.exec(`npm remove ${xpresser}`, {silent: true})
+
     }
 
     console.log(white('............'));
     log('Updating....');
     console.log(white('............'));
 
-    return shell.exec(command);
+    shell.exec(command);
+
+    console.log(white('............'));
+    log(`${xpresser} updated successfully.`);
 };
 
-const loadJobs = function (path = false) {
-    if (path === false) {
+
+/**
+ * Loads project jobs.
+ * @param {string} path
+ * @return {{}}
+ */
+const loadJobs = function (path = '') {
+
+    /**
+     * Defaults to 'backend/jobs'
+     * Cli assumes we are making use of the xpresser framework structure.
+     */
+    if (!path || path === '') {
         path = basePath('backend/jobs');
     }
-    let commands = {};
+
+    const $commands = {};
 
     if (fs.existsSync(path)) {
-        let jobFiles = fs.readdirSync(path);
+        const jobFiles = fs.readdirSync(path);
+
         for (let i = 0; i < jobFiles.length; i++) {
-            let jobFile = jobFiles[i];
-            let jobFullPath = path + '/' + jobFile;
+
+            const jobFile = jobFiles[i];
+            const jobFullPath = path + '/' + jobFile;
 
             if (fs.lstatSync(jobFullPath).isDirectory()) {
+
                 return loadJobs(jobFullPath);
+
             } else if (fs.lstatSync(jobFullPath).isFile()) {
 
-                let job = require(jobFullPath);
+                const job = require(jobFullPath);
                 if (typeof job !== 'object') {
                     logErrorAndExit('Job: {' + jobFile + '} did not return object!');
 
@@ -135,41 +216,59 @@ const loadJobs = function (path = false) {
                     }
                 }
 
-
                 if (typeof job.schedule === "function") {
                     job.schedule = job.schedule();
                 }
 
                 if (typeof job.schedule === "string") {
                     job.path = jobFullPath;
-                    commands[job.command] = job;
+                    $commands[job.command] = job;
                 }
+
             }
         }
     }
 
-    return commands;
+    return $commands;
 };
 
-let commands = {
-    init(lang = 'js') {
-        const UseFile = basePath('use-xjs-cli.json');
+const commands = {
+    /**
+     * Create a cli config file.
+     * @param file
+     */
+    init(file = 'xpresser.js') {
+        let lang = 'js';
+        const UseFile = basePath('use-xpresser-cli.json');
 
         if (fs.existsSync(UseFile)) {
             return logErrorAndExit('Init file already exists.');
         }
 
-        if (lang === 'typescript') lang = 'ts';
-        if (lang === 'javascript') lang = 'js';
-
-        if (lang === 'ts') {
-            fs.copyFileSync(cliPath('factory/use-xjs-cli.ts.json'), UseFile)
-        } else {
-            fs.copyFileSync(cliPath('factory/use-xjs-cli.js.json'), UseFile)
+        if (!fs.existsSync(basePath(file))) {
+            return logErrorAndExit(`File: {${file}} not found!`)
         }
 
-        log("Init file created.")
+        let jsonPath = cliPath('factory/use-xpresser-cli.js.json');
+        let fileToJs = file;
+
+
+        if (file.substr(-3) === '.ts') {
+            lang = 'ts';
+            jsonPath = cliPath('factory/use-xpresser-cli.ts.json');
+            fileToJs = file.substr(0, file.length - 3) + '.js';
+        }
+
+        let fileData = fs.readFileSync(jsonPath).toString();
+
+        fileData = fileData.replace('{{main}}', file);
+        fileData = fileData.replace('{{main_to_js}}', fileToJs);
+
+        fs.writeFileSync(UseFile, fileData);
+
+        log("init file created.")
     },
+
     new(name, overwrite = false, fromRoot = false) {
         if (!fromRoot && ((name === undefined || typeof name === 'string') && !name.length)) {
             return prompt({
@@ -254,7 +353,7 @@ let commands = {
         if (!fromRoot && (process.platform === 'win32' || process.platform === 'win64')) {
             log(`Due To ${yellow('npm --prefix')} is not compatible on ${yellow('windows')}`);
             log(`Enter your project folder (${yellow('cd ' + name)})`);
-            log(`Then run ${yellow('xjs install')}`);
+            log(`Then run ${yellow('xpresser install')}`);
             process.exit();
         }
 
@@ -277,9 +376,9 @@ let commands = {
         log(`Installing ${yellow('dotenv')}...`);
         installInApp('dotenv');
 
-        log(`Installing ${yellow(xjs)}...`);
+        log(`Installing ${yellow(xpresser)}...`);
         console.log(white('This may take a while, Approx 2-5 Minutes depending on your connection.'));
-        installInApp(xjs);
+        installInApp(xpresser);
 
 
         // create install.js file
@@ -311,7 +410,7 @@ let commands = {
             log(`Run ${yellow(`cd ${name}`)}`);
         }
 
-        log(`Run ${yellow('xjs migrate')} to migrate your database.`);
+        log(`Run ${yellow('xpresser migrate')} to migrate your database.`);
         log(`Run ${yellow('node server.js')} to start app. `);
     },
 
@@ -353,7 +452,7 @@ let commands = {
             }
         }
 
-        let appHasXjs = basePath('use-xjs-cli.json');
+        let appHasXjs = basePath('use-xpresser-cli.json');
         if (fs.existsSync(appHasXjs)) {
             if ($returnData) {
                 try {
@@ -367,7 +466,7 @@ let commands = {
                             ||
                             !XjsCliConfig.has('production.main')
                         ) {
-                            return logErrorAndExit(" No development/production settings in use-xjs-cli.json");
+                            return logErrorAndExit(" No development/production settings in use-xpresser-cli.json");
                         } else {
                             return config;
                         }
@@ -499,7 +598,7 @@ let commands = {
             }
 
             cron.schedule(duration, () => {
-                shell.exec('xjs @ ' + cronJob.command);
+                shell.exec('xpresser @ ' + cronJob.command);
             }, {});
 
             log(`Job: ${yellowWithBars(cronJob.command)} added to cron`)
@@ -508,7 +607,7 @@ let commands = {
 
     checkForUpdate() {
         log('Checking npm registry for version update...');
-        let version = shell.exec(`npm show ${xjs} version`, {silent: true}).stdout.trim();
+        let version = shell.exec(`npm show ${xpresser} version`, {silent: true}).stdout.trim();
         let currentVersion = currentXjsVersion();
         if (currentVersion < version) {
             log(`Xjs latest version is ${yellow(version)} but yours is ${whiteBright(currentVersion)}`);
@@ -518,7 +617,7 @@ let commands = {
                 message: `Would you like to update?`
             }).then(({update}) => {
                 if (update) {
-                    updateXjs();
+                    updateXpresser();
                 } else {
                     return log(`No changes made.`);
                 }
@@ -530,7 +629,7 @@ let commands = {
     },
 
     stop(process) {
-        const PM_PATH = basePath(`node_modules/${xjs}/src/Console/ProcessManager.js`);
+        const PM_PATH = basePath(`node_modules/${xpresser}/src/Console/ProcessManager.js`);
 
         if (!fs.existsSync(PM_PATH)) {
             return logErrorAndExit('Xjs Cannot find ProcessManager in this project');

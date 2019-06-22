@@ -18,9 +18,9 @@ if (!config) {
         .action(name => commands.new(name));
 
     program
-        .command('init [lang]')
+        .command('init [xpresser_file]')
         .description("Creates use-xjs-cli.json for your project.")
-        .action((lang)=> commands.init(lang));
+        .action((file)=> commands.init(file));
 
     program
         .command('install')
