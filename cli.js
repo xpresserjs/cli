@@ -12,23 +12,28 @@ program
 
 
 if (!config) {
+
     program
-        .command('new [name]')
+        .command('new <name>')
         .description('Create new xjs project')
         .action(name => commands.new(name));
 
     program
         .command('init [xpresser_file]')
         .description("Creates use-xjs-cli.json for your project.")
-        .action((file)=> commands.init(file));
+        .action((file) => commands.init(file));
 
     program
         .command('install')
         .description('Install xjs in current dir.')
         .action(() => commands.install());
-}
 
-if (config) {
+    program
+        .command('nginx:config')
+        .description('Create a nginx config file for your project in this directory.')
+        .action(() => commands.nginxConf());
+
+} else {
     program
         .command('start [env]')
         .description('Start app.')

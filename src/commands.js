@@ -672,8 +672,114 @@ const commands = {
         }
     },
 
+    /**
+     * Installs a plugin to your project.
+     * @param $plugin
+     * @return {*|void}
+     */
     installPlugin($plugin) {
         return this.cli(`install ${$plugin}`);
+    },
+
+    /**
+     * Nginx conf validator.
+     */
+    nginxConf() {
+        const ASSUMED_NGINX_PATH = '/etc/nginx/sites-available';
+
+        return prompt([
+            {
+                type: 'input',
+                name: 'filename',
+                message: 'Name of config file:',
+                validate(input) {
+                    if (typeof input !== "string" || (input.length < 3)) {
+                        return "Provide a file name."
+                    }
+
+                    return true;
+                }
+            },
+
+            {
+                type: 'list',
+                name: 'pathToFile',
+                message: 'Path to file:',
+                choices: [
+                    `Current working directory: ${cyan(basePath())}`,
+                    `Specify?`,
+                ],
+                filter(choice) {
+
+                    if (choice.includes('working')) {
+                        choice = basePath()
+                    }
+
+                    return choice;
+                }
+            },
+
+            {
+                type: 'input',
+                name: 'pathToFile',
+                message: 'Specify path to file:',
+                when({pathToFile}) {
+                    return pathToFile === 'Specify?';
+                },
+                validate(input) {
+                    const folderExists = fs.existsSync(input);
+                    if (!folderExists) {
+                        return `Folder does not exist`;
+                    } else if (folderExists && !fs.lstatSync(input).isDirectory()) {
+                        return `${input} is not a directory`;
+                    } else {
+                        return true;
+                    }
+                }
+            },
+
+            {
+                type: 'input',
+                name: 'domain',
+                message: `Your app domain:`,
+                validate(input) {
+                    if (typeof input !== "string" || !input.length) {
+                        return "Provide domain."
+                    }
+
+                    return true;
+                }
+            },
+
+            {
+                type: 'input',
+                name: 'app_url',
+                message: `Your app url (including port): e.g (${cyan('localhost:3000')})`,
+                validate(input) {
+                    if (typeof input !== "string" || !input.length) {
+                        return "Provide app url."
+                    }
+
+                    return true;
+                }
+            }
+        ]).then((answers) => {
+            const {filename, pathToFile, domain, app_url} = answers;
+            const fullPath = path.resolve(pathToFile, filename);
+
+            const pathToDefaultData = cliPath('factory/nginx/conf.txt');
+            let nginxConfDefaultData = fs.readFileSync(pathToDefaultData).toString();
+
+            nginxConfDefaultData = nginxConfDefaultData.replace('{{domain}}', domain);
+            nginxConfDefaultData = nginxConfDefaultData.replace('{{app_url}}', app_url);
+
+            try {
+                fs.writeFileSync(fullPath, nginxConfDefaultData);
+                log(`Conf: ${filename} has been created at ${cyan(fullPath)}`)
+            } catch (e) {
+                logErrorAndExit(e.message);
+            }
+        });
     }
 };
 
