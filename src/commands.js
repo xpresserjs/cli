@@ -239,7 +239,7 @@ const commands = {
      */
     init(file = 'xpresser.js') {
         let lang = 'js';
-        const UseFile = basePath('use-xpresser-cli.json');
+        const UseFile = basePath('use-xjs-cli.json');
 
         if (fs.existsSync(UseFile)) {
             return logErrorAndExit('Init file already exists.');
@@ -249,13 +249,13 @@ const commands = {
             return logErrorAndExit(`File: {${file}} not found!`)
         }
 
-        let jsonPath = cliPath('factory/use-xpresser-cli.js.json');
+        let jsonPath = cliPath('factory/use-xjs-cli.js.json');
         let fileToJs = file;
 
 
         if (file.substr(-3) === '.ts') {
             lang = 'ts';
-            jsonPath = cliPath('factory/use-xpresser-cli.ts.json');
+            jsonPath = cliPath('factory/use-xjs-cli.ts.json');
             fileToJs = file.substr(0, file.length - 3) + '.js';
         }
 
@@ -452,7 +452,7 @@ const commands = {
             }
         }
 
-        let appHasXjs = basePath('use-xpresser-cli.json');
+        let appHasXjs = basePath('use-xjs-cli.json');
         if (fs.existsSync(appHasXjs)) {
             if ($returnData) {
                 try {
@@ -466,7 +466,7 @@ const commands = {
                             ||
                             !XjsCliConfig.has('production.main')
                         ) {
-                            return logErrorAndExit(" No development/production settings in use-xpresser-cli.json");
+                            return logErrorAndExit(" No development/production settings in use-xjs-cli.json");
                         } else {
                             return config;
                         }
