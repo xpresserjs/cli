@@ -269,159 +269,65 @@ const commands = {
         log("init file created.")
     },
 
-    new(name, overwrite = false, fromRoot = false) {
-        if (!fromRoot && ((name === undefined || typeof name === 'string') && !name.length)) {
-            return prompt({
+    create(name) {
+        return prompt([
+            {
                 type: 'input',
-                name: 'app_name',
-                message: 'Enter App Name:',
-                validate: name => name.length ? true : 'Provide a project name to continue.'
-            }).then(({app_name}) => this.new(app_name));
-        }
-
-        const appFullPath = basePath(name);
-        const appPath = (str = '') => {
-            return appFullPath + (str.length ? '/' + str : str)
-        };
-
-        name = appFullPath.split('/');
-        if (name.length > 1) {
-            name = name[name.length - 1];
-        } else {
-            name = name[0];
-        }
-
-
-        if (!fromRoot) {
-            if (fs.existsSync(appFullPath) && !overwrite) {
-
-                let self = this;
-                return prompt({
-                    'type': 'confirm',
-                    name: 'app_overwrite',
-                    message: red(`Folder ${whiteWithBars(name)} exists in dir ${whiteWithBars(basePath())}, should i try overwriting this folder?`)
-                }).then(({app_overwrite}) => {
-                    if (app_overwrite) {
-                        return self.new(name, app_overwrite);
-                    } else {
-                        return log(`Delete ${redWithBars(appFullPath)} first.`);
-                    }
-                });
-
-            }
-
-            if (overwrite) {
-                fse.removeSync(appFullPath);
-            }
-
-
-            log(`Creating new project ${yellow(name)}`);
-
-            mkdirp.sync(appFullPath);
-        }
-
-
-        fs.writeFileSync(appFullPath + '/package.json', JSON.stringify({
-                name,
-                version: "0.0.1",
-                description: "",
-                main: "server.js",
-                scripts: {
-                    "start": "node server.js",
-                    "watch": "cross-env NODE_ENV=development node_modules/webpack/bin/webpack.js --watch --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
-                    "prod": "npm run production",
-                    "production": "cross-env NODE_ENV=production node_modules/webpack/bin/webpack.js --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js"
+                name: 'name',
+                message: 'Name new project?',
+                when() {
+                    return name === undefined;
                 },
-                keywords: [],
-                author: "",
-                license: "ISC"
-            }, null, 2
-        ));
+                validate(input) {
+                    if (typeof input !== "string" || (input.length < 3)) {
+                        return "Provide a project name."
+                    }
 
-        let hasKnex = shell.exec('npm ls -g knex', {silent: true}).stdout;
-        if (!hasKnex.includes('knex@')) {
-            log(`Installing ${yellow('knex')} globally.`);
-            shell.exec('npm install knex -g', {silent: true})
-        }
 
-        let hasNodemon = shell.exec('npm ls -g nodemon', {silent: true}).stdout;
-        if (!hasNodemon.includes('nodemon@')) {
-            log(`Installing ${yellow('nodemon')} globally.`);
-            shell.exec('npm install nodemon -g', {silent: true})
-        }
+                    name = input;
 
-        if (!fromRoot && (process.platform === 'win32' || process.platform === 'win64')) {
-            log(`Due To ${yellow('npm --prefix')} is not compatible on ${yellow('windows')}`);
-            log(`Enter your project folder (${yellow('cd ' + name)})`);
-            log(`Then run ${yellow('xpresser install')}`);
-            process.exit();
-        }
-
-        const installInApp = (lib) => {
-            let command = '';
-            if (fromRoot) {
-                if (HasYarnLock()) {
-                    command = `yarn add ${lib} --silent`
-                } else {
-                    command = `npm install ${lib} --no-audit --silent`
+                    return true;
                 }
-            } else {
-                let prefix = `--prefix ${appFullPath}`;
-                command = `npm install ${prefix} ${lib} --save --no-audit --silent`;
+            },
+            {
+                type: 'list',
+                name: 'type',
+                message: 'Project Structure?',
+                choices: [
+                    `Using Ejs Template Engine`,
+                    `Using Edge Template Engine (similar to Laravel Blade)`,
+                ],
+                filter(choice) {
+
+                    if (choice.includes('Ejs')) {
+                        choice = 'ejs'
+                    } else if (choice.includes('Edge')) {
+                        choice = 'edge'
+                    }
+
+                    return choice;
+                }
+            },
+        ]).then(({type}) => {
+            let gitUrl = 'https://github.com/xpresserjs/new-app.git';
+            if (type === 'edge') {
+                gitUrl = 'https://github.com/xpresserjs/new-app-edge-js.git';
             }
 
-            return shell.exec(command)
-        };
+            const command = `git clone ${gitUrl} ${name}`;
+            log(command);
+            shell.exec(command);
 
-        log(`Installing ${yellow('dotenv')}...`);
-        installInApp('dotenv');
-
-        log(`Installing ${yellow(xpresser)}...`);
-        console.log(white('This may take a while, Approx 2-5 Minutes depending on your connection.'));
-        installInApp(xpresser);
+            console.log(white('..........'));
+            console.log(green(`Run the following commands to ${whiteBright('start')} your app.`));
+            console.log(white('..........'));
 
 
-        // create install.js file
-        fs.writeFileSync(appPath('install.js'), fs.readFileSync(cliPath('factory/install.txt')).toString());
-
-        log('Generating needed files...');
-        shell.exec(`node ${appFullPath}/install.js`, {silent: true});
-
-        log(`Renaming ${yellow('env.example')} to ${yellow('.env')}`);
-        fs.copyFileSync(appPath('env.example'), appPath('.env'));
-
-        // Copy Empty Demo Database
-        let DemoDatabase = appPath('storage/app/db');
-        if (!fs.existsSync(DemoDatabase)) {
-            mkdirp.sync(DemoDatabase);
-        }
-
-        DemoDatabase += '/database.sqlite';
-        fs.copyFileSync(cliPath('factory/database.sqlite'), DemoDatabase);
-
-
-        log(`Installation complete!!`);
-
-        console.log(white('..........'));
-        console.log(green(`Run the following commands to migrate your ${whiteBright('database')} and ${whiteBright('start')} your app.`));
-        console.log(white('..........'));
-
-        if (!fromRoot) {
             log(`Run ${yellow(`cd ${name}`)}`);
-        }
-
-        log(`Run ${yellow('xpresser migrate')} to migrate your database.`);
-        log(`Run ${yellow('node server.js')} to start app. `);
-    },
-
-    install() {
-        let hasXjs = this.checkIfInXjsFolder(true);
-        if (hasXjs) {
-            return logErrorAndExit(`Xjs project already exists in this folder.`);
-        }
-
-        log('Preparing for installation...');
-        this.new('', true, true);
+            log(`Run ${yellow('yarn')} or ${yellow(`npm install`)}`);
+            log('After installing all dependencies....');
+            log(`Run ${yellow('node app.js')} to start app. `);
+        });
     },
 
     installProdTools() {

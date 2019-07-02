@@ -14,9 +14,10 @@ program
 if (!config) {
 
     program
-        .command('new <name>')
+        .command('new [name]')
+        .alias('create')
         .description('Create new xjs project')
-        .action(name => commands.new(name));
+        .action(name => commands.create(name));
 
     program
         .command('init [xpresser_file]')
