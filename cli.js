@@ -25,11 +25,6 @@ if (!config) {
         .action((file) => commands.init(file));
 
     program
-        .command('install')
-        .description('Install xjs in current dir.')
-        .action(() => commands.install());
-
-    program
         .command('nginx:config')
         .description('Create a nginx config file for your project in this directory.')
         .action(() => commands.nginxConf());
