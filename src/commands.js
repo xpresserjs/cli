@@ -402,12 +402,15 @@ const commands = {
             log('Rolling back migrations...');
         }
 
-        let rollback = this.cli(`migrate rollback`, {silent: true}).stdout;
+        const rollback = shell.exec(
+            this.cliCommand(`migrate rollback`),
+            {silent: true}
+        );
 
-        if (!rollback.toLowerCase().includes('already')) {
+        if (!rollback.stdout.toLowerCase().includes('already')) {
             return this.migrateRefresh(true);
         } else {
-            this.cli('migrate latest');
+            this.cli('migrate latest', false);
             return log('Migrations refreshed successfully!');
         }
     },
@@ -436,11 +439,14 @@ const commands = {
         }
     },
 
-    cli(command) {
+    cli(command, exit = true) {
+        shell.exec(this.cliCommand(command));
+        if (exit) process.exit();
+    },
+
+    cliCommand(command){
         const config = XjsCliConfig.get('development');
-        const shellCommand = `${config.console} ${config.main} cli ${command}`;
-        shell.exec(shellCommand);
-        process.exit();
+        return `${config.console} ${config.main} cli ${command}`;
     },
 
     makeView(name) {

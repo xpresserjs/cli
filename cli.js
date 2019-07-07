@@ -57,7 +57,7 @@ if (!config) {
 
     program
         .command('migrate:refresh')
-        .description('Rollback the last set of migrations')
+        .description('Rollback all migrations and run them again.')
         .action(() => commands.migrateRefresh());
 
     program
