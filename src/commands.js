@@ -469,6 +469,18 @@ const commands = {
         return this.cli('make:job ' + args.join(' '))
     },
 
+    makeEvent(name, namespace) {
+        if (namespace === undefined) {
+            namespace = name;
+        }
+
+        const command = `make:event ${name} ${namespace}`.trim();
+
+        console.log(command);
+
+        return this.cli(command)
+    },
+
     runJob(args) {
         return this.cli('@' + args.join(' '))
     },

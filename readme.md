@@ -5,8 +5,10 @@
 The command line tool for [Xpresser Framework](https://www.npmjs.com/package/xpresser)
 
 ### Install
-```console
+Using **Yarn** or **Npm**
+```sh
 npm install xjs-cli -g
+yarn global add xjs-cli
 ```
 
 ### Usage

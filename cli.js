@@ -72,23 +72,29 @@ if (!config) {
         .description('Generate new Job.')
         .action((name, command) => commands.makeJob(name, command));
 
+    program
+        .command('make:event <name> [namespace]')
+        // .alias('mk:job')
+        .description('Generate new event file.')
+        .action((name, namespace) => commands.makeEvent(name, namespace));
+
 
     program
         .command('make:view <name>')
         // .alias('mk:v')
-        .description('Generate new view.')
+        .description('Generate new view file.')
         .action((name) => commands.makeView(name));
 
     program
         .command('make:model <name> [table]')
         // .alias('mk:model')
-        .description('Generate new Model.')
+        .description('Generate new Model file.')
         .action((name, table) => commands.makeModel(name, table));
 
     program
         .command('make:controller <name>')
         // .alias('mk:ctrl')
-        .description('Generate new Controller.')
+        .description('Generate new Controller file.')
         .action((name) => commands.makeController(name));
 
     program
