@@ -245,10 +245,10 @@ node-cron@^2.0.3:
     opencollective-postinstall "^2.0.0"
     tz-offset "0.0.1"
 
-object-collection@^1.0.7:
-  version "1.0.11"
-  resolved "https://registry.yarnpkg.com/object-collection/-/object-collection-1.0.11.tgz#2417de93f21774173eafca9a43b418535e11164a"
-  integrity sha512-eUp93eDvUzlCdhTnStu6uKkai/6DQDyT2048AnD4I7vFHafkEB9JMYiW9N2YPLKQfa3l/XrapV4tDLAMNLBU7A==
+object-collection@^1.0.15:
+  version "1.0.15"
+  resolved "https://registry.yarnpkg.com/object-collection/-/object-collection-1.0.15.tgz#8a83a6d1fbc02cf3a1a951cc87958c0cc4080313"
+  integrity sha512-AZrc4ZwBGMNlUybpXORGSHA3+7HGNEP4rc9Yj0X1Ba3XO07Bco9bpdjVd5G2/TrSDoV40/Dxh2lFXyXTDdn41Q==
   dependencies:
     lodash "^4.17.14"
 

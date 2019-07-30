@@ -11,9 +11,7 @@ const {
 // Import Other Libraries
 const {prompt} = require('inquirer');
 const fs = require('fs');
-const fse = require('fs-extra');
 const path = require('path');
-const mkdirp = require('mkdirp');
 const shell = require('shelljs');
 const ObjectCollection = require("object-collection");
 const _ = ObjectCollection._;
@@ -109,8 +107,6 @@ const logErrorAndExit = (...args) => {
 
 // Define Colors with bars helper function
 const yellowWithBars = (str) => yellow('{' + str.trim() + '}');
-const whiteWithBars = (str) => whiteBright('{' + str.trim() + '}');
-const redWithBars = (str) => red('{' + str.trim() + '}');
 
 /**
  * Get current XjsVersion from package.json
@@ -150,7 +146,7 @@ const HasYarnLock = () => fs.existsSync(basePath('yarn.lock'));
  * @return {*}
  */
 const updateXpresser = () => {
-    let command = `npm install ${xpresser} --save --no-audit --silent`
+    let command = `npm install ${xpresser} --save --no-audit --silent`;
 
     if (HasYarnLock()) {
 
@@ -177,6 +173,40 @@ const updateXpresser = () => {
 
 
 /**
+ * Get All files in a given path.
+ * @param path
+ * @returns {Array}
+ */
+const getAllFiles = (path) => {
+    let list = [];
+
+    if (fs.existsSync(path)) {
+        const Files = fs.readdirSync(path);
+
+        for (let i = 0; i < Files.length; i++) {
+
+            const File = Files[i];
+            const FullPath = path + '/' + File;
+
+            if (fs.lstatSync(FullPath).isDirectory()) {
+
+                const files = getAllFiles(FullPath);
+                for (let j = 0; j < files.length; j++) {
+                    const file = files[j];
+                    list.push(file);
+                }
+
+            } else {
+                list.push(FullPath);
+            }
+        }
+    }
+
+    return list;
+};
+
+
+/**
  * Loads project jobs.
  * @param {string} path
  * @return {{}}
@@ -193,39 +223,28 @@ const loadJobs = function (path = '') {
 
     const $commands = {};
 
-    if (fs.existsSync(path)) {
-        const jobFiles = fs.readdirSync(path);
 
-        for (let i = 0; i < jobFiles.length; i++) {
+    const files = getAllFiles(path);
 
-            const jobFile = jobFiles[i];
-            const jobFullPath = path + '/' + jobFile;
+    for (const file of files) {
+        const jobFile = file.replace(path, '');
+        const job = require(file);
 
-            if (fs.lstatSync(jobFullPath).isDirectory()) {
+        if (typeof job !== 'object') {
+            logErrorAndExit('Job: {' + jobFile + '} did not return object!');
 
-                return loadJobs(jobFullPath);
-
-            } else if (fs.lstatSync(jobFullPath).isFile()) {
-
-                const job = require(jobFullPath);
-                if (typeof job !== 'object') {
-                    logErrorAndExit('Job: {' + jobFile + '} did not return object!');
-
-                    if (job.hasOwnProperty('command') || !job.hasOwnProperty('handler')) {
-                        logErrorAndExit('Job: {' + jobFile + '} is not structured properly!')
-                    }
-                }
-
-                if (typeof job.schedule === "function") {
-                    job.schedule = job.schedule();
-                }
-
-                if (typeof job.schedule === "string") {
-                    job.path = jobFullPath;
-                    $commands[job.command] = job;
-                }
-
+            if (job.hasOwnProperty('command') || !job.hasOwnProperty('handler')) {
+                logErrorAndExit('Job: {' + jobFile + '} is not structured properly!')
             }
+        }
+
+        if (typeof job.schedule === "function") {
+            job.schedule = job.schedule();
+        }
+
+        if (typeof job.schedule === "string") {
+            job.path = file;
+            $commands[job.command] = job;
         }
     }
 
@@ -444,7 +463,7 @@ const commands = {
         if (exit) process.exit();
     },
 
-    cliCommand(command){
+    cliCommand(command) {
         const config = XjsCliConfig.get('development');
         return `${config.console} ${config.main} cli ${command}`;
     },
@@ -493,7 +512,8 @@ const commands = {
 
         const cron = require('node-cron');
 
-        let cronJobs = loadJobs(basePath(XjsCliConfig.get("jobsPath")));
+        const jobsPath = basePath(XjsCliConfig.get("jobsPath"));
+        let cronJobs = loadJobs(jobsPath);
 
         let cronJobKeys = Object.keys(cronJobs);
         const cronCmd = basePath('cron-cmd.js');
@@ -509,6 +529,8 @@ const commands = {
             if (startCronCmd.stdout.trim().length) {
                 return log('Cron Started.');
             }
+
+            return log(startCronCmd.stderr);
         }
 
         for (let i = 0; i < cronJobKeys.length; i++) {
@@ -609,8 +631,6 @@ const commands = {
      * Nginx conf validator.
      */
     nginxConf() {
-        const ASSUMED_NGINX_PATH = '/etc/nginx/sites-available';
-
         return prompt([
             {
                 type: 'input',
