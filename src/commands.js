@@ -476,8 +476,6 @@ const commands = {
 
         const command = `make:event ${name} ${namespace}`.trim();
 
-        console.log(command);
-
         return this.cli(command)
     },
 
@@ -490,6 +488,7 @@ const commands = {
 
         const config = XjsCliConfig.get(env);
         // Require Project Xjs
+
         require(basePath(config['main']));
 
         const cron = require('node-cron');
@@ -522,7 +521,7 @@ const commands = {
             }
 
             cron.schedule(duration, () => {
-                shell.exec('xpresser @ ' + cronJob.command);
+                shell.exec('xjs @ ' + cronJob.command);
             }, {});
 
             log(`Job: ${yellowWithBars(cronJob.command)} added to cron`)
@@ -575,6 +574,7 @@ const commands = {
                 log('Cron Stopped.');
             }
         }
+
         if (process === 'all' || process === 'server') {
             let stopServer = shell.exec('forever stop ./server.js', {silent: true});
             if (stopServer.stdout.trim().length) {
