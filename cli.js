@@ -16,7 +16,7 @@ if (!config) {
     program
         .command('new [name]')
         .alias('create')
-        .description('Create new xjs project')
+        .description('Create new xjs project.')
         .action(name => commands.create(name));
 
     program
@@ -29,20 +29,25 @@ if (!config) {
         .description('Create a nginx config file for your project in this directory.')
         .action(() => commands.nginxConf());
 
+    program
+        .command('install-prod-tools')
+        .description('Install Production tools.')
+        .action(() => commands.installProdTools());
+
 } else {
     program
         .command('start [env]')
-        .description('Start app.')
+        .description('Start server.')
         .action(env => commands.start(env));
 
     program
         .command('install [plugin]')
-        .description('Install plugin')
+        .description('Install plugin.')
         .action(plugin => commands.installPlugin(plugin));
 
     program
         .command('migrate')
-        .description('Migrate database of current project')
+        .description('Migrate database of current project.')
         .action(() => commands.migrate());
 
     program
@@ -52,7 +57,7 @@ if (!config) {
 
     program
         .command('migrate:rollback')
-        .description('Rollback the last set of migrations')
+        .description('Rollback the last set of migrations.')
         .action(() => commands.migrateRollback());
 
     program
@@ -77,7 +82,6 @@ if (!config) {
         // .alias('mk:job')
         .description('Generate new event file.')
         .action((name, namespace) => commands.makeEvent(name, namespace));
-
 
     program
         .command('make:view <name>')
@@ -123,10 +127,7 @@ if (!config) {
         .description('Restart Server or Cron')
         .action((process) => commands.restart(process));
 
-    program
-        .command('install-prod-tools')
-        .description('Install Production tools')
-        .action(() => commands.installProdTools());
+
     program
         .command('check-for-update')
         .description('Update Xjs using your desired package manager.')

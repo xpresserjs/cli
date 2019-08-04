@@ -251,6 +251,10 @@ const loadJobs = function (path = '') {
     return $commands;
 };
 
+
+/**
+ * List Of Commands
+ */
 const commands = {
     /**
      * Create a cli config file.
@@ -280,7 +284,7 @@ const commands = {
 
         let fileData = fs.readFileSync(jsonPath).toString();
 
-        fileData = fileData.replace('{{main}}', file);
+        fileData = fileData.replace(new RegExp('{{main}}', 'g'), file);
         fileData = fileData.replace('{{main_to_js}}', fileToJs);
 
         fs.writeFileSync(UseFile, fileData);
@@ -288,12 +292,17 @@ const commands = {
         log("init file created.")
     },
 
+    /**
+     * Create new app
+     * @param name
+     * @returns *
+     */
     create(name) {
         return prompt([
             {
                 type: 'input',
                 name: 'name',
-                message: 'Name new project?',
+                message: 'Name of new project?',
                 when() {
                     return name === undefined;
                 },
@@ -329,12 +338,15 @@ const commands = {
             },
         ]).then(({type}) => {
             let gitUrl = 'https://github.com/xpresserjs/new-app.git';
+
             if (type === 'edge') {
                 gitUrl = 'https://github.com/xpresserjs/new-app-edge-js.git';
             }
 
             const command = `git clone ${gitUrl} ${name}`;
+
             log(command);
+
             shell.exec(command);
 
             console.log(white('..........'));
@@ -343,22 +355,32 @@ const commands = {
 
 
             log(`Run ${yellow(`cd ${name}`)}`);
-            log(`Run ${yellow('yarn')} or ${yellow(`npm install`)}`);
+            log(`Run ${yellow('yarn install')} or ${yellow(`npm install`)}`);
             log('After installing all dependencies....');
             log(`Run ${yellow('node app.js')} to start app. `);
         });
     },
 
+    /**
+     * Installs Required Tools
+     * --- KnexJs
+     * --- Nodemon
+     * --- Forever
+     */
     installProdTools() {
         log(`Checking if ${yellow('knex')} exists...`);
+
         let hasKnex = shell.exec('npm ls -g knex', {silent: true}).stdout;
+
         if (!hasKnex.includes('knex@')) {
             log(`Installing ${yellow('knex')} globally.`);
             shell.exec('npm install knex -g', {silent: true})
         }
 
         log(`Checking if ${yellow('forever')} exists...`);
+
         let hasForever = shell.exec('npm ls -g forever', {silent: true}).stdout;
+
         if (!hasForever.includes('forever@')) {
             log(`Installing ${yellow('forever')} globally.`);
             shell.exec('npm install forever -g', {silent: true})
@@ -367,17 +389,26 @@ const commands = {
         log('All production tools are installed!');
     },
 
+    /**
+     * Checks if current project has xpresser.
+     * @param trueOrFalse
+     * @param $returnData
+     * @returns {void|boolean|ObjectCollection|*}
+     */
     checkIfInXjsFolder(trueOrFalse = false, $returnData = false) {
 
         if (typeof XjsCliConfig !== "undefined") {
+
             if (trueOrFalse) {
                 return true;
             } else if ($returnData) {
                 return XjsCliConfig;
             }
+
         }
 
         let appHasXjs = basePath('use-xjs-cli.json');
+
         if (fs.existsSync(appHasXjs)) {
             if ($returnData) {
                 try {
@@ -401,20 +432,33 @@ const commands = {
                 }
             }
         } else {
-            const msg = 'Xjs project not found in this folder.';
+            const msg = 'Xpresser init file not found in this folder.';
             return trueOrFalse ? false : logErrorAndExit(msg);
         }
 
     },
 
+    /**
+     * Migrate Database
+     * @returns {*|void}
+     */
     migrate() {
         return this.cli("migrate");
     },
 
+    /**
+     * Make Migrations
+     * @param args
+     */
     migrateMake(...args) {
         this.cli(`migrate make ${args.join(' ')}`);
     },
 
+    /**
+     * Refresh Migrate
+     * @param skip
+     * @returns {void|*}
+     */
     migrateRefresh(skip = false) {
         if (!skip) {
             this.checkIfInXjsFolder();
@@ -434,10 +478,18 @@ const commands = {
         }
     },
 
+    /**
+     * Rollback migrations
+     * @returns {*|void}
+     */
     migrateRollback() {
         return this.cli('migrate rollback');
     },
 
+    /**
+     * Start Server
+     * @param env
+     */
     start(env = 'development') {
         let config = XjsCliConfig;
 
@@ -458,36 +510,77 @@ const commands = {
         }
     },
 
+    /**
+     * Run CLi Commands in shell
+     * @param command
+     * @param exit
+     */
     cli(command, exit = true) {
         shell.exec(this.cliCommand(command));
         if (exit) process.exit();
     },
 
+    /**
+     * Command generator helper.
+     * @param command
+     * @returns {string}
+     */
     cliCommand(command) {
         const config = XjsCliConfig.get('development');
         return `${config.console} ${config.main} cli ${command}`;
     },
 
+    /**
+     * Make new View
+     * @param name
+     * @returns {*|void}
+     */
     makeView(name) {
         return this.cli("make:view " + name)
     },
 
+    /**
+     * Make new Controller
+     * @param name
+     * @returns {*|void}
+     */
     makeController(name) {
         return this.cli('make:controller ' + name)
     },
 
+    /**
+     * Make new Model
+     * @param args
+     * @returns {*|void}
+     */
     makeModel(...args) {
         return this.cli('make:model ' + args.join(' '))
     },
 
+    /**
+     * Make new Middleware
+     * @param name
+     * @returns {*|void}
+     */
     makeMiddleware(name) {
         return this.cli('make:middleware ' + name)
     },
 
+    /**
+     * Make new Job
+     * @param args
+     * @returns {*|void}
+     */
     makeJob(...args) {
         return this.cli('make:job ' + args.join(' '))
     },
 
+    /**
+     * Make new Event
+     * @param name
+     * @param namespace
+     * @returns {*|void}
+     */
     makeEvent(name, namespace) {
         if (namespace === undefined) {
             namespace = name;
@@ -498,10 +591,20 @@ const commands = {
         return this.cli(command)
     },
 
+    /**
+     * Run cron Job
+     * @param args
+     * @returns {*|void}
+     */
     runJob(args) {
         return this.cli('@' + args.join(' '))
     },
 
+    /**
+     * Run Cron Jobs
+     * @param env
+     * @param from
+     */
     cron(env = 'development', from = undefined) {
         if (env === 'prod') env = 'production';
 
@@ -550,6 +653,10 @@ const commands = {
         }
     },
 
+    /**
+     * Check for Xpresser Update in project
+     * @returns {PromiseLike<T> | Promise<T>}
+     */
     checkForUpdate() {
         log('Checking npm registry for version update...');
         let version = shell.exec(`npm show ${xpresser} version`, {silent: true}).stdout.trim();
@@ -573,6 +680,10 @@ const commands = {
         log(`Version: ${whiteBright(currentVersion)}`)
     },
 
+    /**
+     * Stop a process
+     * @param process
+     */
     stop(process) {
         const PM_PATH = basePath(`node_modules/${xpresser}/src/Console/ProcessManager.js`);
 
@@ -607,11 +718,16 @@ const commands = {
         }
     },
 
+    /**
+     * Restart Process
+     * @param process
+     */
     restart(process) {
         if (process === 'all' || process === 'cron') {
             this.stop('cron');
             this.cron('prod')
         }
+
         if (process === 'all' || process === 'server') {
             this.stop('server');
             this.start('prod');
@@ -714,7 +830,7 @@ const commands = {
             const pathToDefaultData = cliPath('factory/nginx/conf.txt');
             let nginxConfDefaultData = fs.readFileSync(pathToDefaultData).toString();
 
-            nginxConfDefaultData = nginxConfDefaultData.replace('{{domain}}', domain);
+            nginxConfDefaultData = nginxConfDefaultData.replace(new RegExp('{{domain}}', 'g'), domain);
             nginxConfDefaultData = nginxConfDefaultData.replace('{{app_url}}', app_url);
 
             try {

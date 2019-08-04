@@ -2,16 +2,17 @@
 
 ![Alt text](https://cdn.jsdelivr.net/npm/xpresser/xpresser-logo-black.png "Xpresser Logo")
 
-The command line tool for [Xpresser Framework](https://www.npmjs.com/package/xpresser)
+Command line tool for [Xpresser Framework](https://www.npmjs.com/package/xpresser)
 
-### Install
-Using **Yarn** or **Npm**
+#### [Full Documentation](https://xpresserjs.com/xjs-cli.html)
+
+Note: Requires **global** Installation.
+
+##### NPM
 ```sh
-npm install xjs-cli -g
-yarn global add xjs-cli
+npm i xjs-cli -g
 ```
-
-### Usage
-```console
-xjs --help
+##### YARN
+```sh
+yarn global add xjs-cli
 ```
