@@ -653,7 +653,6 @@ const commands = {
             log(`Job: ${yellowWithBars(cronJob.command)} added to cron`)
         }
 
-        console.log("here");
     },
 
     /**
