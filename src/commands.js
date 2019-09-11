@@ -609,7 +609,8 @@ const commands = {
         if (env === 'prod') env = 'production';
 
         const config = XjsCliConfig.get(env);
-        // Require Project Xjs
+        // Require Project Main File
+        XjsCliConfig['require_only'] = true;
 
         require(basePath(config['main']));
 
@@ -651,6 +652,8 @@ const commands = {
 
             log(`Job: ${yellowWithBars(cronJob.command)} added to cron`)
         }
+
+        console.log("here");
     },
 
     /**
