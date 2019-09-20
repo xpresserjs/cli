@@ -12,7 +12,7 @@ const {
 const {prompt} = require('inquirer');
 const fs = require('fs');
 const path = require('path');
-const shell = require('shelljs');
+const {exec} = require('shelljs');
 const ObjectCollection = require("object-collection");
 const _ = ObjectCollection._;
 
@@ -157,7 +157,7 @@ const updateXpresser = () => {
 
         log('Using Npm...');
         // if NPM remove xpresser first
-        shell.exec(`npm remove ${xpresser}`, {silent: true})
+        exec(`npm remove ${xpresser}`, {silent: true})
 
     }
 
@@ -165,7 +165,7 @@ const updateXpresser = () => {
     log('Updating....');
     console.log(white('............'));
 
-    shell.exec(command);
+    exec(command);
 
     console.log(white('............'));
     log(`${xpresser} updated successfully.`);
@@ -347,7 +347,7 @@ const commands = {
 
             log(command);
 
-            shell.exec(command);
+            exec(command);
 
             console.log(white('..........'));
             console.log(green(`Run the following commands to ${whiteBright('start')} your app.`));
@@ -370,20 +370,20 @@ const commands = {
     installProdTools() {
         log(`Checking if ${yellow('knex')} exists...`);
 
-        let hasKnex = shell.exec('npm ls -g knex', {silent: true}).stdout;
+        let hasKnex = exec('npm ls -g knex', {silent: true}).stdout;
 
         if (!hasKnex.includes('knex@')) {
             log(`Installing ${yellow('knex')} globally.`);
-            shell.exec('npm install knex -g', {silent: true})
+            exec('npm install knex -g', {silent: true})
         }
 
         log(`Checking if ${yellow('forever')} exists...`);
 
-        let hasForever = shell.exec('npm ls -g forever', {silent: true}).stdout;
+        let hasForever = exec('npm ls -g forever', {silent: true}).stdout;
 
         if (!hasForever.includes('forever@')) {
             log(`Installing ${yellow('forever')} globally.`);
-            shell.exec('npm install forever -g', {silent: true})
+            exec('npm install forever -g', {silent: true})
         }
 
         log('All production tools are installed!');
@@ -465,7 +465,7 @@ const commands = {
             log('Rolling back migrations...');
         }
 
-        const rollback = shell.exec(
+        const rollback = exec(
             this.cliCommand(`migrate rollback`),
             {silent: true}
         );
@@ -496,7 +496,7 @@ const commands = {
         if (env === 'prod' || env === 'production') {
             config = XjsCliConfig.get('production');
             const command = `${config.server} ${config.main}`;
-            const startServer = shell.exec(command, {silent: config.server.includes('forever')});
+            const startServer = exec(command, {silent: config.server.includes('forever')});
 
             if (!startServer.stderr.trim().length) {
                 log(command);
@@ -506,7 +506,7 @@ const commands = {
             }
         } else {
             config = XjsCliConfig.get('development');
-            shell.exec(`${config.server} ${config.main}`);
+            exec(`${config.server} ${config.main}`);
         }
     },
 
@@ -516,8 +516,8 @@ const commands = {
      * @param exit
      */
     cli(command, exit = true) {
-        shell.exec(this.cliCommand(command));
-        if (exit) process.exit();
+        command = this.cliCommand(command);
+        return exec(command);
     },
 
     /**
@@ -629,7 +629,7 @@ const commands = {
         env = env === 'production' ? 'prod' : env;
 
         if (from === undefined && env === 'prod') {
-            let startCronCmd = shell.exec(`forever start ./cron-cmd.js`, {silent: true});
+            let startCronCmd = exec(`forever start ./cron-cmd.js`, {silent: true});
             if (startCronCmd.stdout.trim().length) {
                 return log('Cron Started.');
             }
@@ -647,7 +647,7 @@ const commands = {
             }
 
             cron.schedule(duration, () => {
-                shell.exec('xjs @ ' + cronJob.command);
+                exec('xjs @ ' + cronJob.command);
             }, {});
 
             log(`Job: ${yellowWithBars(cronJob.command)} added to cron`)
@@ -661,7 +661,7 @@ const commands = {
      */
     checkForUpdate() {
         log('Checking npm registry for version update...');
-        let version = shell.exec(`npm show ${xpresser} version`, {silent: true}).stdout.trim();
+        let version = exec(`npm show ${xpresser} version`, {silent: true}).stdout.trim();
         let currentVersion = currentXjsVersion();
         if (currentVersion < version) {
             log(`Xjs latest version is ${yellow(version)} but yours is ${whiteBright(currentVersion)}`);
@@ -702,7 +702,7 @@ const commands = {
 
 
         if (process === 'all' || process === 'cron') {
-            let stopCron = shell.exec('forever stop ./cron-cmd.js', {silent: true});
+            let stopCron = exec('forever stop ./cron-cmd.js', {silent: true});
             if (stopCron.stdout.trim().length) {
                 // End all process associated with file
                 ProcessManager.endProcess(basePath('cron-cmd.js'), 'all');
@@ -711,7 +711,7 @@ const commands = {
         }
 
         if (process === 'all' || process === 'server') {
-            let stopServer = shell.exec('forever stop ./server.js', {silent: true});
+            let stopServer = exec('forever stop ./server.js', {silent: true});
             if (stopServer.stdout.trim().length) {
                 // End all process associated with file
                 ProcessManager.endProcess(basePath('server.js'), 'all');
