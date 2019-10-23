@@ -310,10 +310,7 @@ const commands = {
                     if (typeof input !== "string" || (input.length < 3)) {
                         return "Provide a project name."
                     }
-
-
                     name = input;
-
                     return true;
                 }
             },
@@ -322,12 +319,15 @@ const commands = {
                 name: 'type',
                 message: 'Project Structure?',
                 choices: [
+                    `Simple App (Hello World, No views)`,
                     `Using Ejs Template Engine`,
                     `Using Edge Template Engine (similar to Laravel Blade)`,
                 ],
                 filter(choice) {
 
-                    if (choice.includes('Ejs')) {
+                    if (choice.includes('Simple')) {
+                        choice = 'simple'
+                    } else if (choice.includes('Ejs')) {
                         choice = 'ejs'
                     } else if (choice.includes('Edge')) {
                         choice = 'edge'
@@ -337,9 +337,11 @@ const commands = {
                 }
             },
         ]).then(({type}) => {
-            let gitUrl = 'https://github.com/xpresserjs/new-app.git';
+            let gitUrl = 'https://github.com/xpresserjs/new-app-lite.git';
 
-            if (type === 'edge') {
+            if (type === 'ejs') {
+                gitUrl = 'https://github.com/xpresserjs/new-app.git';
+            } else if (type === 'edge') {
                 gitUrl = 'https://github.com/xpresserjs/new-app-edge-js.git';
             }
 
@@ -542,10 +544,79 @@ const commands = {
     /**
      * Make new Controller
      * @param name
+     * @param options
      * @returns {*|void}
      */
-    makeController(name) {
-        return this.cli('make:controller ' + name)
+    makeController(name, options) {
+        let $type = undefined;
+        const $types = _.pick(options, [
+            'class', 'object', 'services'
+        ]);
+
+        if ($types["object"]) {
+            $type = "object"
+        } else if ($types["class"]) {
+            $type = "class"
+        } else if ($types["services"]) {
+            $type = "services"
+        }
+
+
+        return prompt([
+            {
+                type: 'input',
+                name: 'name',
+                message: 'Name of new controller?',
+                when() {
+                    return name === undefined;
+                },
+                validate(input) {
+                    if (typeof input !== "string" || (input.length < 1)) {
+                        return "Provide a controller name."
+                    }
+                    name = input;
+                    return true;
+                }
+            },
+            {
+                type: 'list',
+                name: 'type',
+                message: 'Controller Type?',
+                choices: [
+                    `Controller Class`,
+                    `Controller Object`,
+                    `Controller with Custom Services`,
+                ],
+                when() {
+                    return $type === undefined;
+                },
+                filter(choice) {
+                    if (choice.includes('Class')) {
+                        choice = 'class'
+                    } else if (choice.includes('Object')) {
+                        choice = 'object'
+                    } else if (choice.includes('Services')) {
+                        choice = 'services'
+                    }
+                    return choice;
+                }
+            }
+        ]).then(({type}) => {
+            if (type) $type = type;
+            let command = 'make:controller';
+
+            if ($type === 'object') {
+                command = 'make:controller_object'
+            } else if ($type === 'services') {
+                command = 'make:controller_services'
+            }
+
+            return this.cli(`${command} ${name}`);
+        });
+    },
+
+    makeControllerService(name){
+        return this.cli(`make:controllerService ${name}`);
     },
 
     /**

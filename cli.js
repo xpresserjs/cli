@@ -2,6 +2,7 @@
 const program = require('commander');
 const commands = require('./src/commands');
 let packages = require('./package.json');
+let _ = require("object-collection")._;
 
 let config = commands.checkIfInXjsFolder(true, true);
 
@@ -96,10 +97,23 @@ if (!config) {
         .action((name, table) => commands.makeModel(name, table));
 
     program
-        .command('make:controller <name>')
+        .command('make:controller [name]')
         // .alias('mk:ctrl')
         .description('Generate new Controller file.')
-        .action((name) => commands.makeController(name));
+        .action((name, args) => {
+            return commands.makeController(name, _.pick(args, [
+                'class', 'object', 'services'
+            ]))
+        })
+        .option('-c, --class', "Controller Class")
+        .option('-o, --object', "Controller Object")
+        .option('-s, --services', "Controller with Custom Services");
+
+    program
+        .command('make:controllerService <name>')
+        // .alias('mk:model')
+        .description('Generate new Controller Service file.')
+        .action((name, table) => commands.makeControllerService(name, table));
 
     program
         .command('make:migration <name>')
