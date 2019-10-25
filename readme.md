@@ -1,5 +1,7 @@
 ## Xpresser-CLI
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/xpresserjs/cli.svg)](https://greenkeeper.io/)
+
 ![Alt text](https://cdn.jsdelivr.net/npm/xpresser/xpresser-logo-black.png "Xpresser Logo")
 
 Command line tool for [Xpresser Framework](https://www.npmjs.com/package/xpresser)
