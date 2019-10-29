@@ -395,7 +395,7 @@ const commands = {
      * Checks if current project has xpresser.
      * @param trueOrFalse
      * @param $returnData
-     * @returns {void|boolean|ObjectCollection|*}
+     * @returns {void|boolean|*}
      */
     checkIfInXjsFolder(trueOrFalse = false, $returnData = false) {
 
@@ -615,7 +615,7 @@ const commands = {
         });
     },
 
-    makeControllerService(name){
+    makeControllerService(name) {
         return this.cli(`make:controllerService ${name}`);
     },
 
@@ -683,11 +683,15 @@ const commands = {
         // Require Project Main File
         XjsCliConfig['require_only'] = true;
 
+        // Require Xpresser [Require_Only]
         require(basePath(config['main']));
 
+        // Require Node Cron
         const cron = require('node-cron');
 
         const jobsPath = basePath(XjsCliConfig.get("jobsPath"));
+
+        $.logAndExit(`Reading files in ${jobsPath}`);
         let cronJobs = loadJobs(jobsPath);
 
         let cronJobKeys = Object.keys(cronJobs);
