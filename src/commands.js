@@ -27,22 +27,7 @@ const xpresser = 'xpresser';
 /**
  * Set DefaultConfig to provide values for undefined keys.
  */
-const defaultConfig = {
-
-    development: {
-        'main': "xpresser.js",
-        'console': "node",
-        'server': "node",
-    },
-
-    production: {
-        'main': "xpresser.js",
-        'console': "node",
-        'server': "forever start",
-    },
-
-    jobsPath: 'backend/jobs'
-};
+const defaultConfig = require('../factory/use-xjs-cli.js');
 
 
 /**
@@ -367,7 +352,7 @@ const commands = {
      * Installs Required Tools
      * --- KnexJs
      * --- Nodemon
-     * --- Forever
+     * --- Pm2
      */
     installProdTools() {
         log(`Checking if ${yellow('knex')} exists...`);
@@ -379,13 +364,13 @@ const commands = {
             exec('npm install knex -g', {silent: true})
         }
 
-        log(`Checking if ${yellow('forever')} exists...`);
+        log(`Checking if ${yellow('pm2')} exists...`);
 
-        let hasForever = exec('npm ls -g forever', {silent: true}).stdout;
+        let hasPm2 = exec('npm ls -g pm2', {silent: true}).stdout;
 
-        if (!hasForever.includes('forever@')) {
-            log(`Installing ${yellow('forever')} globally.`);
-            exec('npm install forever -g', {silent: true})
+        if (!hasPm2.includes('pm2@')) {
+            log(`Installing ${yellow('pm2')} globally.`);
+            exec('npm install pm2 -g', {silent: true})
         }
 
         log('All production tools are installed!');
@@ -420,9 +405,9 @@ const commands = {
                         global['XjsCliConfig'] = new ObjectCollection(config);
 
                         if (
-                            !XjsCliConfig.has('development.main')
+                            !XjsCliConfig.has('dev.main')
                             ||
-                            !XjsCliConfig.has('production.main')
+                            !XjsCliConfig.has('prod.main')
                         ) {
                             return logErrorAndExit(" No development/production settings in use-xjs-cli.json");
                         } else {
@@ -492,13 +477,13 @@ const commands = {
      * Start Server
      * @param env
      */
-    start(env = 'development') {
+    start(env = 'dev') {
         let config = XjsCliConfig;
 
-        if (env === 'prod' || env === 'production') {
-            config = XjsCliConfig.get('production');
-            const command = `${config.server} ${config.main}`;
-            const startServer = exec(command, {silent: config.server.includes('forever')});
+        if (env === 'prod' || env === 'pro') {
+            config = XjsCliConfig.get('prod');
+            const command = `${config.start_server} ${config.main}`;
+            const startServer = exec(command, {silent: true});
 
             if (!startServer.stderr.trim().length) {
                 log(command);
@@ -507,29 +492,31 @@ const commands = {
                 logErrorAndExit(startServer.stderr);
             }
         } else {
-            config = XjsCliConfig.get('development');
-            exec(`${config.server} ${config.main}`);
+            config = XjsCliConfig.get('dev');
+            exec(`${config.start_server} ${config.main}`);
         }
     },
 
     /**
      * Run CLi Commands in shell
      * @param command
+     * @param isDev
      * @param exit
      */
-    cli(command, exit = true) {
-        command = this.cliCommand(command);
+    cli(command, isDev = true, exit = true) {
+        command = this.cliCommand(command, isDev);
         return exec(command);
     },
 
     /**
      * Command generator helper.
      * @param command
+     * @param isDev
      * @returns {string}
      */
-    cliCommand(command) {
-        const config = XjsCliConfig.get('development');
-        return `${config.console} ${config.main} cli ${command}`;
+    cliCommand(command, isDev = true) {
+        const config = XjsCliConfig.get(isDev ? 'dev' : 'prod');
+        return `${config.start_console} ${config.main} cli ${command}`;
     },
 
     /**
@@ -639,11 +626,13 @@ const commands = {
 
     /**
      * Make new Job
-     * @param args
      * @returns {*|void}
+     * @param name
+     * @param command
+     * @param d
      */
-    makeJob(...args) {
-        return this.cli('make:job ' + args.join(' '))
+    makeJob(name, command, d) {
+        return this.cli(`make:job ${name} ${command}`)
     },
 
     /**
@@ -673,13 +662,12 @@ const commands = {
 
     /**
      * Run Cron Jobs
-     * @param env
+     * @param isProduction
      * @param from
      */
-    cron(env = 'development', from = undefined) {
-        if (env === 'prod') env = 'production';
+    cron(isProduction = false, from = undefined) {
 
-        const config = XjsCliConfig.get(env);
+        const config = XjsCliConfig.get(isProduction ? 'prod' : 'dev');
         // Require Project Main File
         XjsCliConfig['require_only'] = true;
 
@@ -687,11 +675,10 @@ const commands = {
         require(basePath(config['main']));
 
         // Require Node Cron
-        const cron = require('node-cron');
+        const CronJob = require('cron').CronJob;
 
-        const jobsPath = basePath(XjsCliConfig.get("jobsPath"));
+        const jobsPath = basePath(XjsCliConfig.get("jobs_path"));
 
-        $.logAndExit(`Reading files in ${jobsPath}`);
         let cronJobs = loadJobs(jobsPath);
 
         let cronJobKeys = Object.keys(cronJobs);
@@ -701,10 +688,10 @@ const commands = {
             fs.writeFileSync(cronCmd, fs.readFileSync(cliPath('factory/cron-cmd.txt')));
         }
 
-        env = env === 'production' ? 'prod' : env;
 
-        if (from === undefined && env === 'prod') {
-            let startCronCmd = exec(`forever start ./cron-cmd.js`, {silent: true});
+        if (from === undefined && isProduction) {
+            const start_cron = XjsCliConfig.get('prod.start_cron');
+            let startCronCmd = exec(`${start_cron} cron-cmd.js`, {silent: true});
             if (startCronCmd.stdout.trim().length) {
                 return log('Cron Started.');
             }
@@ -719,11 +706,15 @@ const commands = {
 
             if (duration === 'everyMinute') {
                 duration = "* * * * *";
+            } else if (duration === 'everySecond') {
+                duration = "* * * * * *"
             }
 
-            cron.schedule(duration, () => {
-                exec('xjs @ ' + cronJob.command);
-            }, {});
+            const timezone = cronJob['timezone'] || process.env.TZ || 'America/Los_Angeles';
+
+            new CronJob(duration, function () {
+                return cronJob['handler'](this)
+            }, null, true, timezone);
 
             log(`Job: ${yellowWithBars(cronJob.command)} added to cron`)
         }
@@ -777,7 +768,8 @@ const commands = {
 
 
         if (process === 'all' || process === 'cron') {
-            let stopCron = exec('forever stop ./cron-cmd.js', {silent: true});
+            const stop_cron = XjsCliConfig.get('prod.stop_cron');
+            let stopCron = exec(`${stop_cron} cron-cmd.js`, {silent: true});
             if (stopCron.stdout.trim().length) {
                 // End all process associated with file
                 ProcessManager.endProcess(basePath('cron-cmd.js'), 'all');
@@ -786,7 +778,8 @@ const commands = {
         }
 
         if (process === 'all' || process === 'server') {
-            let stopServer = exec('forever stop ./server.js', {silent: true});
+            const stop_server = XjsCliConfig.get('prod.stop_server');
+            let stopServer = exec(`${stop_server} server.js`, {silent: true});
             if (stopServer.stdout.trim().length) {
                 // End all process associated with file
                 ProcessManager.endProcess(basePath('server.js'), 'all');

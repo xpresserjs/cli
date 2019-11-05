@@ -1,13 +1,18 @@
 {
-  "development": {
+  "dev": {
     "main": "{{main}}",
-    "console": "ts-node-dev --transpileOnly",
-    "server": "ts-node-dev --respawn --transpileOnly"
+    "start_cron": "ts-node-dev --transpileOnly",
+    "start_server": "ts-node-dev --respawn --transpileOnly",
+    "start_console": "ts-node-dev --transpileOnly"
   },
-  "production": {
+  "prod": {
     "main": "dist/{{main_to_js}}",
-    "console": "node",
-    "server": "forever start"
+    "start_cron": "pm2 start",
+    "stop_cron": "pm2 start",
+    "start_server": "pm2 start",
+    "stop_server": "pm2 stop",
+    "start_console": "node"
   },
-  "jobsPath": "jobs"
+  "jobs_path": "backend/jobs"
 }
+

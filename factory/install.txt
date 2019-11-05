@@ -1,3 +1,0 @@
-const installXjs = require('@trapcode/xpresser/install');
-// Install Xjs
-installXjs(__filename);

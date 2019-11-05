@@ -5,7 +5,9 @@ let packages = require('./package.json');
 let _ = require("object-collection")._;
 
 let config = Commands.checkIfInXjsFolder(true, true);
+const isProd = (command) => command.parent.prod || false;
 
+program.option('-p --prod', 'Use production config.');
 
 program
     .version(packages.version)
@@ -37,9 +39,9 @@ if (!config) {
 
 } else {
     program
-        .command('start [env]')
+        .command('start')
         .description('Start server.')
-        .action(env => Commands.start(env));
+        .action(({parent}) => Commands.start(parent.prod ? 'prod' : 'dev'));
 
     program
         .command('install [plugin]')
@@ -127,9 +129,9 @@ if (!config) {
         .action((name) => Commands.makeMiddleware(name));
 
     program
-        .command('cron [env] [from_cmd]')
+        .command('cron [from_cmd]')
         .description('Start cron registered commands.')
-        .action((env, from_cmd) => Commands.cron(env, from_cmd));
+        .action((from_cmd, command) => Commands.cron(isProd(command), from_cmd));
 
     program
         .command('stop <process>')
@@ -189,7 +191,7 @@ if (!config) {
                         let commands = args;
 
                         if (args.length > 1) {
-                            commands = args.splice(0, args.length-1);
+                            commands = args.splice(0, args.length - 1);
                         } else {
                             commands = [];
                         }
