@@ -5,7 +5,9 @@ let packages = require('./package.json');
 let _ = require("object-collection")._;
 
 let config = Commands.checkIfInXjsFolder(true, true);
-const isProd = (command) => command.parent.prod || false;
+const isProd = (command) => {
+    return !!(typeof command === "object" && command.parent && command.parent.prod);
+};
 
 program.option('-p --prod', 'Use production config.');
 
@@ -41,7 +43,7 @@ if (!config) {
     program
         .command('start')
         .description('Start server.')
-        .action(({parent}) => Commands.start(parent.prod ? 'prod' : 'dev'));
+        .action((command) => Commands.start(isProd(command) ? 'prod' : 'dev'));
 
     program
         .command('install [plugin]')
