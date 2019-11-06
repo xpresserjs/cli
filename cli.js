@@ -131,7 +131,8 @@ if (!config) {
     program
         .command('cron [from_cmd]')
         .description('Start cron registered commands.')
-        .action((from_cmd, command) => Commands.cron(isProd(command), from_cmd));
+        .action((from_cmd, command) => Commands.cron(isProd(command), from_cmd, command.object))
+        .option('-o, --object', "Show job object");
 
     program
         .command('stop <process>')

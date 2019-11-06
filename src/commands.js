@@ -664,9 +664,9 @@ const commands = {
      * Run Cron Jobs
      * @param isProduction
      * @param from
+     * @param showObject
      */
-    cron(isProduction = false, from = undefined) {
-
+    cron(isProduction = false, from = undefined, showObject = false) {
         const config = XjsCliConfig.get(isProduction ? 'prod' : 'dev');
         // Require Project Main File
         XjsCliConfig['require_only'] = true;
@@ -675,7 +675,7 @@ const commands = {
         require(basePath(config['main']));
 
         // Require Node Cron
-        const CronJob = require('cron').CronJob;
+        const {CronJob} = require('cron');
 
         const jobsPath = basePath(XjsCliConfig.get("jobs_path"));
 
@@ -710,10 +710,19 @@ const commands = {
                 duration = "* * * * * *"
             }
 
-            const timezone = cronJob['timezone'] || process.env.TZ || 'America/Los_Angeles';
+            if (duration && duration !== cronJob.schedule)
+                cronJob['schedule'] = duration;
+
+            const timezone = cronJob['timezone'] = cronJob['timezone'] || process.env.TZ || 'America/Los_Angeles';
             const namespace = cronJob['command'];
 
+            /**
+             * Register Cron Jobs
+             */
             new CronJob(duration, async function () {
+                /**
+                 * Try Job.handler else catch and log error.
+                 */
                 try {
                     if ($.utils.isAsyncFn(cronJob['handler'])) {
                         await cronJob['handler'](this);
@@ -727,9 +736,10 @@ const commands = {
                     ]);
                 }
 
-            }, null, true, timezone);
+            }, true, timezone);
 
-            log(`Job: ${yellowWithBars(cronJob.command)} added to cron`)
+            log(`Job: ${yellowWithBars(namespace)} added to cron`);
+            if (showObject) $.log(cronJob)
         }
 
     },
