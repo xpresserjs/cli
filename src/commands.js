@@ -711,9 +711,22 @@ const commands = {
             }
 
             const timezone = cronJob['timezone'] || process.env.TZ || 'America/Los_Angeles';
+            const namespace = cronJob['command'];
 
-            new CronJob(duration, function () {
-                return cronJob['handler'](this)
+            new CronJob(duration, async function () {
+                try {
+                    if ($.utils.isAsyncFn(cronJob['handler'])) {
+                        await cronJob['handler'](this);
+                    } else {
+                        cronJob['handler'](this);
+                    }
+                } catch (e) {
+                    $.logPerLine([
+                        {error: `Job Error: {${namespace}}`},
+                        {error: e.stack}
+                    ]);
+                }
+
             }, null, true, timezone);
 
             log(`Job: ${yellowWithBars(cronJob.command)} added to cron`)

@@ -8,7 +8,7 @@
   "prod": {
     "main": "{{main}}",
     "start_cron": "pm2 start",
-    "stop_cron": "pm2 start",
+    "stop_cron": "pm2 stop",
     "start_server": "pm2 start",
     "stop_server": "pm2 stop",
     "start_console": "node"

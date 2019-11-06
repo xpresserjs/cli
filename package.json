@@ -21,10 +21,11 @@
     "inquirer": "7.0.0",
     "mkdirp": "^0.5.1",
     "object-collection": "1.0.16",
-    "shelljs": "^0.8.3",
-    "xpresser": "^0.1.66"
+    "shelljs": "^0.8.3"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "xpresser": "^0.1.69"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/xpresserjs/cli.git"
