@@ -85,8 +85,12 @@ const logError = (...args) => {
  * @param args
  */
 const logErrorAndExit = (...args) => {
-    args.unshift('Error: ');
-    logError(...args);
+
+    if (args.length) {
+        args.unshift('Error: ');
+        logError(...args);
+    }
+
     process.exit();
 };
 
@@ -668,20 +672,19 @@ const commands = {
      */
     cron(isProduction = false, from = undefined, showObject = false) {
         const config = XjsCliConfig.get(isProduction ? 'prod' : 'dev');
-        // Require Project Main File
-        XjsCliConfig['require_only'] = true;
+        const jobsPath = basePath(XjsCliConfig.get("jobs_path"));
+        const cronJsPath = jobsPath + '/cron.js';
 
-        // Require Xpresser [Require_Only]
-        require(basePath(config['main']));
+        if (!fs.existsSync(cronJsPath)) {
+            return logErrorAndExit(`cron.js not found in jobs directory: (${jobsPath})`)
+        }
 
+        let cronJobs = require(cronJsPath);
         // Require Node Cron
         const {CronJob} = require('cron');
 
-        const jobsPath = basePath(XjsCliConfig.get("jobs_path"));
 
-        let cronJobs = loadJobs(jobsPath);
-
-        let cronJobKeys = Object.keys(cronJobs);
+        // let cronJobKeys = Object.keys(cronJobs);
         const cronCmd = basePath('cron-cmd.js');
 
         if (!fs.existsSync(cronCmd)) {
@@ -699,23 +702,34 @@ const commands = {
             return log(startCronCmd.stderr);
         }
 
-        for (let i = 0; i < cronJobKeys.length; i++) {
-            const cronJobKey = cronJobKeys[i];
-            const cronJob = cronJobs[cronJobKey];
-            let duration = cronJob['schedule'];
 
+        for (const cronJob of cronJobs) {
+
+            if (!cronJob.hasOwnProperty('job')) {
+                return logErrorAndExit(`One or many of your Jobs has no {job} property.`);
+            }
+
+            const item = cronJob['job'];
+
+
+            if (!cronJob.hasOwnProperty('schedule')) {
+                return logErrorAndExit(`Job {${item}} has no schedule property.`);
+            }
+
+            const args = cronJob['args'] || [];
+
+            if (!Array.isArray(args)) {
+                return logErrorAndExit(`Job {${item}} args must be of type Array`);
+            }
+
+            let duration = cronJob['schedule'];
             if (duration === 'everyMinute') {
                 duration = "* * * * *";
             } else if (duration === 'everySecond') {
                 duration = "* * * * * *"
             }
 
-            if (duration && duration !== cronJob.schedule)
-                cronJob['schedule'] = duration;
-
             const timezone = cronJob['timezone'] = cronJob['timezone'] || process.env.TZ || 'America/Los_Angeles';
-            const namespace = cronJob['command'];
-
             /**
              * Register Cron Jobs
              */
@@ -724,24 +738,16 @@ const commands = {
                  * Try Job.handler else catch and log error.
                  */
                 try {
-                    if ($.utils.isAsyncFn(cronJob['handler'])) {
-                        await cronJob['handler'](this);
-                    } else {
-                        cronJob['handler'](this);
-                    }
+                    return commands.runJob([item, ...args]);
                 } catch (e) {
-                    $.logPerLine([
-                        {error: `Job Error: {${namespace}}`},
-                        {error: e.stack}
-                    ]);
+                    logError(`Job Error: {${item}}`);
+                    log(e.stack);
                 }
 
             }, true, timezone);
 
-            log(`Job: ${yellowWithBars(namespace)} added to cron`);
-            if (showObject) $.log(cronJob)
+            log(`Job: ${yellowWithBars(item)} added to cron`);
         }
-
     },
 
     /**
@@ -776,26 +782,10 @@ const commands = {
      * @param process
      */
     stop(process) {
-        const PM_PATH = basePath(`node_modules/${xpresser}/src/Console/ProcessManager.js`);
-
-        if (!fs.existsSync(PM_PATH)) {
-            return logErrorAndExit('Xjs Cannot find ProcessManager in this project');
-        }
-        let ProcessManager = {};
-
-        try {
-            ProcessManager = new (require(PM_PATH))(basePath());
-        } catch (e) {
-            return logErrorAndExit(e.message);
-        }
-
-
         if (process === 'all' || process === 'cron') {
             const stop_cron = XjsCliConfig.get('prod.stop_cron');
             let stopCron = exec(`${stop_cron} cron-cmd.js`, {silent: true});
             if (stopCron.stdout.trim().length) {
-                // End all process associated with file
-                ProcessManager.endProcess(basePath('cron-cmd.js'), 'all');
                 log('Cron Stopped.');
             }
         }
@@ -804,8 +794,6 @@ const commands = {
             const stop_server = XjsCliConfig.get('prod.stop_server');
             let stopServer = exec(`${stop_server} server.js`, {silent: true});
             if (stopServer.stdout.trim().length) {
-                // End all process associated with file
-                ProcessManager.endProcess(basePath('server.js'), 'all');
                 log('Server Stopped.');
             }
         }
