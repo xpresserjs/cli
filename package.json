@@ -19,7 +19,7 @@
     "cron": "^1.7.2",
     "fs-extra": "^8.1.0",
     "inquirer": "^7.0.3",
-    "mkdirp": "^0.5.1",
+    "mkdirp": "^1.0.0",
     "object-collection": "1.0.16",
     "shelljs": "^0.8.3"
   },
