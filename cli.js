@@ -199,7 +199,11 @@ if (!config) {
                             commands = [];
                         }
 
-                        let command = (extension['action'] + ' ' + commands.join(' ')).trim();
+                        let action = extension['action'];
+
+                        if (!action) action = extension['command'].split(" ")[0];
+
+                        let command = (action + ' ' + commands.join(' ')).trim();
                         return Commands.cli(command);
                     });
             }

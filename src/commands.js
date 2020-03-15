@@ -733,7 +733,7 @@ const commands = {
             /**
              * Register Cron Jobs
              */
-            new CronJob(duration, async function () {
+            new CronJob(duration, function () {
                 /**
                  * Try Job.handler else catch and log error.
                  */
