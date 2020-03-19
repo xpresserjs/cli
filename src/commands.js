@@ -430,54 +430,6 @@ const commands = {
     },
 
     /**
-     * Migrate Database
-     * @returns {*|void}
-     */
-    migrate() {
-        return this.cli("migrate");
-    },
-
-    /**
-     * Make Migrations
-     * @param args
-     */
-    migrateMake(...args) {
-        this.cli(`migrate make ${args.join(' ')}`);
-    },
-
-    /**
-     * Refresh Migrate
-     * @param skip
-     * @returns {void|*}
-     */
-    migrateRefresh(skip = false) {
-        if (!skip) {
-            this.checkIfInXjsFolder();
-            log('Rolling back migrations...');
-        }
-
-        const rollback = exec(
-            this.cliCommand(`migrate rollback`),
-            {silent: true}
-        );
-
-        if (!rollback.stdout.toLowerCase().includes('already')) {
-            return this.migrateRefresh(true);
-        } else {
-            this.cli('migrate latest', false);
-            return log('Migrations refreshed successfully!');
-        }
-    },
-
-    /**
-     * Rollback migrations
-     * @returns {*|void}
-     */
-    migrateRollback() {
-        return this.cli('migrate rollback');
-    },
-
-    /**
      * Start Server
      * @param env
      */
@@ -633,9 +585,8 @@ const commands = {
      * @returns {*|void}
      * @param name
      * @param command
-     * @param d
      */
-    makeJob(name, command, d) {
+    makeJob(name, command) {
         return this.cli(`make:job ${name} ${command}`)
     },
 

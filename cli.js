@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const program = require('commander');
+const {program} = require('commander');
 const Commands = require('./src/commands');
 let packages = require('./package.json');
 let _ = require("object-collection")._;
@@ -49,26 +49,6 @@ if (!config) {
         .command('install [plugin]')
         .description('Install plugin.')
         .action(plugin => Commands.installPlugin(plugin));
-
-    program
-        .command('migrate')
-        .description('Migrate database of current project.')
-        .action(() => Commands.migrate());
-
-    program
-        .command('migrate:make <name>')
-        .description('Generate new Middleware.')
-        .action((name) => Commands.migrateMake(name));
-
-    program
-        .command('migrate:rollback')
-        .description('Rollback the last set of migrations.')
-        .action(() => Commands.migrateRollback());
-
-    program
-        .command('migrate:refresh')
-        .description('Rollback all migrations and run them again.')
-        .action(() => Commands.migrateRefresh());
 
     program
         .command('run <job...>')
