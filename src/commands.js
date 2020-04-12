@@ -472,7 +472,20 @@ const commands = {
      */
     cliCommand(command, isDev = true) {
         const config = XjsCliConfig.get(isDev ? 'dev' : 'prod');
-        return `${config.start_console} ${config.main} cli ${command}`;
+        return `${config.start_console} ${config.main} cli ${command}`.trim();
+    },
+
+    /**
+     * Show routes in project
+     * @param search
+     * @param query
+     * @returns {*}
+     */
+    routes(search, query){
+        if(!search) search = '';
+        if(!query) query = '';
+
+        return this.cli(`routes ${search} ${query}`)
     },
 
     /**

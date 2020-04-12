@@ -51,6 +51,11 @@ if (!config) {
         .action(plugin => Commands.installPlugin(plugin));
 
     program
+        .command('routes [search] [query]')
+        .description('Show routes registered in this project')
+        .action((search, query) => Commands.routes(search, query));
+
+    program
         .command('run <job...>')
         .alias('@')
         .description('Run Jobs')
