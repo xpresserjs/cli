@@ -100,11 +100,6 @@ if (!config) {
         .action((name, table) => Commands.makeControllerService(name, table));
 
     program
-        .command('make:migration <name>')
-        .description('Generate new Middleware.')
-        .action((name) => Commands.migrateMake(name));
-
-    program
         .command('make:middleware <name>')
         // .alias('mk:guard')
         .description('Generate new Middleware.')
