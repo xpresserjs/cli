@@ -41,6 +41,16 @@ if (!config) {
 
 } else {
     program
+        .command('up')
+        .description('Remove App from maintenance mood.')
+        .action(() => Commands.up());
+
+    program
+        .command('down')
+        .description('Put App in maintenance mood.')
+        .action(() => Commands.down());
+
+    program
         .command('start')
         .description('Start server.')
         .action((command) => Commands.start(isProd(command) ? 'prod' : 'dev'));

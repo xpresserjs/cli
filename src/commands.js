@@ -481,11 +481,28 @@ const commands = {
      * @param query
      * @returns {*}
      */
-    routes(search, query){
-        if(!search) search = '';
-        if(!query) query = '';
+    routes(search, query) {
+        if (!search) search = '';
+        if (!query) query = '';
 
         return this.cli(`routes ${search} ${query}`)
+    },
+
+
+    /**
+     * Remove App from maintenance mood
+     * @returns {*}
+     */
+    up() {
+        return this.cli("up");
+    },
+
+    /**
+     * Put App in maintenance mood
+     * @returns {*}
+     */
+    down() {
+        return this.cli("down");
     },
 
     /**
