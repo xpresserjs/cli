@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 const {program} = require('commander');
+const {red} = require('chalk');
 const Commands = require('./src/commands');
 let packages = require('./package.json');
 let _ = require("object-collection")._;
@@ -8,6 +9,21 @@ let config = Commands.checkIfInXjsFolder(true, true);
 const isProd = (command) => {
     return !!(typeof command === "object" && command.parent && command.parent.prod);
 };
+
+
+/**
+ * If config.version is present in config then run a version check.
+ */
+if (config && config.version) {
+    const version = config.version;
+    if (version.substr(0, 2) === '>=' && !(packages.version >= version.substr(2))) {
+        console.log(red(`This Project requires xjs-cli version ${version}, upgrade xjs-cli to continue.`))
+        process.exit();
+    } else if (version.substr(0, 2) === '<=' && !(packages.version <= version.substr(2))) {
+        console.log(red(`This Project requires xjs-cli version ${version}, downgrade xjs-cli to continue.`))
+        process.exit();
+    }
+}
 
 program.option('-p --prod', 'Use production config.');
 
