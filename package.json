@@ -19,7 +19,8 @@
     "cron": "^1.8.2",
     "inquirer": "^7.1.0",
     "object-collection": "^1.0.21",
-    "shelljs": "^0.8.3"
+    "shelljs": "^0.8.3",
+    "snyk": "^1.316.1"
   },
   "devDependencies": {},
   "repository": {
@@ -29,5 +30,10 @@
   "bugs": {
     "url": "https://github.com/xpresserjs/cli/issues"
   },
-  "homepage": "https://xpresserjs.com/xjs-cli.html"
+  "homepage": "https://xpresserjs.com/xjs-cli.html",
+  "scripts": {
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
+  },
+  "snyk": true
 }
