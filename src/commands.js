@@ -714,7 +714,7 @@ const commands = {
             /**
              * Register Cron Jobs
              */
-            new CronJob(duration, function () {
+            new CronJob(duration, () => {
                 /**
                  * Try Job.handler else catch and log error.
                  */
@@ -729,6 +729,8 @@ const commands = {
 
             log(`Job: ${yellowWithBars(item)} added to cron`);
         }
+
+        log(`Running ${yellowWithBars((cronJobs.length).toString())} registered cron jobs`);
     },
 
     /**
