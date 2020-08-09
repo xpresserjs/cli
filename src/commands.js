@@ -310,7 +310,7 @@ const commands = {
                 choices: [
                     `Simple App (Hello World, No views)`,
                     `Using Ejs Template Engine`,
-                    `Using Edge Template Engine (similar to Laravel Blade)`,
+                    `Using Edge Template Engine (similar to Blade template)`,
                 ],
                 filter(choice) {
 

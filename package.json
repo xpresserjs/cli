@@ -16,11 +16,11 @@
   "author": "Xpresser",
   "license": "ISC",
   "dependencies": {
-    "chalk": "^4.0.0",
+    "chalk": "^4.1.0",
     "commander": "^5.1.0",
     "cron": "^1.8.2",
-    "inquirer": "^7.1.0",
-    "object-collection": "^1.0.24",
+    "inquirer": "^7.3.3",
+    "object-collection": "^1.0.26",
     "shelljs": "^0.8.4"
   },
   "devDependencies": {},
