@@ -715,6 +715,9 @@ const commands = {
 
         const spawnCron = XjsCliConfig.get('async_cron_jobs', false);
 
+        if(spawnCron)
+            log('Running Asynchronously...')
+
 
         for (const cronJob of cronJobs) {
             if (!cronJob.hasOwnProperty('job')) {
