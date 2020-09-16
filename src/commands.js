@@ -12,6 +12,7 @@ const {
 const {prompt} = require('inquirer');
 const fs = require('fs');
 const path = require('path');
+const {spawn} = require('child_process');
 const {exec} = require('shelljs');
 const ObjectCollection = require("object-collection");
 const _ = ObjectCollection._;
@@ -464,6 +465,25 @@ const commands = {
         return exec(command);
     },
 
+
+    /**
+     * Run CLi Commands in shell
+     * @param command
+     * @param isDev
+     * @param exit
+     */
+    cliSpawn(command, isDev = true, exit = true) {
+        command = this.cliCommand(command, isDev);
+        const $commands = command.trim().split(' ');
+        const [, ...$afterFirstCommand] = $commands;
+        // return spawn($commands[0], $afterFirstCommand);
+        const $process = spawn($commands[0], $afterFirstCommand);
+
+        $process.stdout.on('data', (msg) => {
+            console.log(msg.toString().trim())
+        });
+    },
+
     /**
      * Command generator helper.
      * @param command
@@ -645,6 +665,16 @@ const commands = {
         return this.cli('@' + args.join(' '))
     },
 
+
+    /**
+     * Run cron Job
+     * @param args
+     * @returns {*|void}
+     */
+    spawnJob(args) {
+        return this.cliSpawn('@' + args.join(' '))
+    },
+
     /**
      * Run Cron Jobs
      * @param isProduction
@@ -652,7 +682,7 @@ const commands = {
      * @param showObject
      */
     cron(isProduction = false, from = undefined, showObject = false) {
-        const config = XjsCliConfig.get(isProduction ? 'prod' : 'dev');
+        // const config = XjsCliConfig.get(isProduction ? 'prod' : 'dev');
         const jobsPath = basePath(XjsCliConfig.get("jobs_path"));
         const cronJsPath = jobsPath + '/cron.js';
 
@@ -683,9 +713,10 @@ const commands = {
             return log(startCronCmd.stderr);
         }
 
+        const spawnCron = XjsCliConfig.get('async_cron_jobs', false);
+
 
         for (const cronJob of cronJobs) {
-
             if (!cronJob.hasOwnProperty('job')) {
                 return logErrorAndExit(`One or many of your Jobs has no {job} property.`);
             }
@@ -719,7 +750,12 @@ const commands = {
                  * Try Job.handler else catch and log error.
                  */
                 try {
-                    return commands.runJob([item, ...args]);
+                    if (spawnCron) {
+                        return commands.spawnJob([item, ...args]);
+                    } else {
+                        return commands.runJob([item, ...args]);
+                    }
+
                 } catch (e) {
                     logError(`Job Error: {${item}}`);
                     log(e.stack);
