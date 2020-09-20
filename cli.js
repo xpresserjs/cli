@@ -152,6 +152,11 @@ if (!config) {
         .description('Restart Server or Cron')
         .action((process) => Commands.restart(process));
 
+    program
+        .command('publish <plugin> <folder>')
+        .description('Extract a folder from it\'s plugin directory.')
+        .action((plugin, folder) => Commands.publish(plugin, folder))
+
 
     program
         .command('check-for-update')

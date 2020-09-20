@@ -838,6 +838,16 @@ const commands = {
     },
 
     /**
+     * Publish Folders into project
+     * @param plugin
+     * @param folder
+     * @return {*}
+     */
+    publish(plugin, folder){
+        return this.cli(`publish ${plugin} ${folder}`);
+    },
+
+    /**
      * Installs a plugin to your project.
      * @param $plugin
      * @return {*|void}
