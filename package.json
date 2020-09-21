@@ -1,0 +1,35 @@
+{
+  "name": "xjs-cli",
+  "version": "0.1.22",
+  "description": "Xpresser Framework Cli",
+  "main": "cli.js",
+  "bin": {
+    "xjs": "./cli.js"
+  },
+  "keywords": [
+    "xpresser",
+    "xpresser-cli",
+    "xjs",
+    "xjs-framework",
+    "cli"
+  ],
+  "author": "Xpresser",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^4.1.0",
+    "commander": "^5.1.0",
+    "cron": "^1.8.2",
+    "inquirer": "^7.3.3",
+    "object-collection": "^1.0.26",
+    "shelljs": "^0.8.4"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xpresserjs/cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/xpresserjs/cli/issues"
+  },
+  "homepage": "https://xpresserjs.com/xjs-cli.html"
+}

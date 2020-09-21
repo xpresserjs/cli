@@ -1,0 +1,19 @@
+server {
+	listen 80;
+#	listen 443 ssl;
+
+	server_name {{domain}} www.{{domain}};
+
+#	ssl_certificate "cert.pem";
+#   ssl_certificate_key "cert.key";
+
+
+	location / {
+        proxy_pass http://{{app_url}};
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}

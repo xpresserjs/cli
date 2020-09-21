@@ -1,0 +1,18 @@
+{
+  "dev": {
+    "main": "{{main}}",
+    "start_cron": "ts-node-dev --transpileOnly",
+    "start_server": "ts-node-dev --respawn --transpileOnly",
+    "start_console": "ts-node-dev --transpileOnly"
+  },
+  "prod": {
+    "main": "dist/{{main_to_js}}",
+    "start_cron": "pm2 start",
+    "stop_cron": "pm2 stop",
+    "start_server": "pm2 start",
+    "stop_server": "pm2 stop",
+    "start_console": "node"
+  },
+  "jobs_path": "backend/jobs"
+}
+
