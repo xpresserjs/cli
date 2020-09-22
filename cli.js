@@ -153,9 +153,9 @@ if (!config) {
         .action((process) => Commands.restart(process));
 
     program
-        .command('publish <plugin> <folder>')
+        .command('publish <plugin> <folder> [overwrite]')
         .description('Extract a folder from it\'s plugin directory.')
-        .action((plugin, folder) => Commands.publish(plugin, folder))
+        .action((plugin, folder, overwrite) => Commands.publish(plugin, folder, overwrite))
 
 
     program

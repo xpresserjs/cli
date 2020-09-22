@@ -841,10 +841,11 @@ const commands = {
      * Publish Folders into project
      * @param plugin
      * @param folder
+     * @param overwrite
      * @return {*}
      */
-    publish(plugin, folder){
-        return this.cli(`publish ${plugin} ${folder}`);
+    publish(plugin, folder, overwrite){
+        return this.cli(`publish ${plugin} ${folder} ${overwrite}`.trim());
     },
 
     /**
