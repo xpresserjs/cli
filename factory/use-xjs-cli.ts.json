@@ -1,9 +1,9 @@
 {
   "dev": {
     "main": "{{main}}",
-    "start_cron": "ts-node-dev --transpileOnly",
-    "start_server": "ts-node-dev --respawn --transpileOnly",
-    "start_console": "ts-node-dev --transpileOnly"
+    "start_cron": "ts-node-dev {{main}} --transpileOnly",
+    "start_server": "ts-node-dev {{main}} --respawn --transpileOnly",
+    "start_console": "ts-node-dev {{main}} --transpileOnly"
   },
   "prod": {
     "main": "dist/{{main_to_js}}",

@@ -428,7 +428,7 @@ const commands = {
     start(env = 'dev') {
         let config = XjsCliConfig;
 
-        if (env === 'prod' || env === 'pro') {
+        if (env === 'prod' || env === 'production') {
             config = XjsCliConfig.get('prod');
             const command = `${config.start_server} ${config.main}`;
             const startServer = exec(command, {silent: true});
@@ -441,7 +441,10 @@ const commands = {
             }
         } else {
             config = XjsCliConfig.get('dev');
-            exec(`${config.start_server} ${config.main}`);
+            let main = config['main'];
+            let command = config['start_server'];
+
+            exec(command.includes(main)? command : `${command} ${main}`);
         }
     },
 
