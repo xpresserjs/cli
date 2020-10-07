@@ -444,7 +444,7 @@ const commands = {
             let main = config['main'];
             let command = config['start_server'];
 
-            exec(command.includes(main)? command : `${command} ${main}`);
+            exec(command.includes(main) ? command : `${command} ${main}`);
         }
     },
 
