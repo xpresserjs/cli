@@ -355,20 +355,9 @@ const commands = {
 
     /**
      * Installs Required Tools
-     * --- KnexJs
-     * --- Nodemon
      * --- Pm2
      */
     installProdTools() {
-        log(`Checking if ${yellow('knex')} exists...`);
-
-        let hasKnex = exec('npm ls -g knex', {silent: true}).stdout;
-
-        if (!hasKnex.includes('knex@')) {
-            log(`Installing ${yellow('knex')} globally.`);
-            exec('npm install knex -g', {silent: true})
-        }
-
         log(`Checking if ${yellow('pm2')} exists...`);
 
         let hasPm2 = exec('npm ls -g pm2', {silent: true}).stdout;
@@ -715,7 +704,7 @@ const commands = {
 
         const spawnCron = XjsCliConfig.get('async_cron_jobs', false);
 
-        if(spawnCron)
+        if (spawnCron)
             log('Running Asynchronously...')
 
 
@@ -844,7 +833,7 @@ const commands = {
      * @param overwrite
      * @return {*}
      */
-    publish(plugin, folder, overwrite){
+    publish(plugin, folder, overwrite) {
         return this.cli(`publish ${plugin} ${folder} ${overwrite}`.trim());
     },
 
