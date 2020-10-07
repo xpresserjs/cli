@@ -356,19 +356,21 @@ const commands = {
     /**
      * Installs Required Tools
      * --- Pm2
+     *
+     * @deprecated
      */
-    installProdTools() {
-        log(`Checking if ${yellow('pm2')} exists...`);
-
-        let hasPm2 = exec('npm ls -g pm2', {silent: true}).stdout;
-
-        if (!hasPm2.includes('pm2@')) {
-            log(`Installing ${yellow('pm2')} globally.`);
-            exec('npm install pm2 -g', {silent: true})
-        }
-
-        log('All production tools are installed!');
-    },
+    // installProdTools() {
+    //     log(`Checking if ${yellow('pm2')} exists...`);
+    //
+    //     let hasPm2 = exec('npm ls -g pm2', {silent: true}).stdout;
+    //
+    //     if (!hasPm2.includes('pm2@')) {
+    //         log(`Installing ${yellow('pm2')} globally.`);
+    //         exec('npm install pm2 -g', {silent: true})
+    //     }
+    //
+    //     log('All production tools are installed!');
+    // },
 
     /**
      * Checks if current project has xpresser.

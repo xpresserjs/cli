@@ -50,10 +50,13 @@ if (!config) {
         .description('Create a nginx config file for your project in this directory.')
         .action(() => Commands.nginxConf());
 
-    program
-        .command('install-prod-tools')
-        .description('Install Production tools.')
-        .action(() => Commands.installProdTools());
+    /**
+     * @deprecated
+     */
+    // program
+    //     .command('install-prod-tools')
+    //     .description('Install Production tools.')
+    //     .action(() => Commands.installProdTools());
 
 } else {
     program
