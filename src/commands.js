@@ -282,6 +282,37 @@ const commands = {
         log("init file created.")
     },
 
+
+    tsc(build) {
+        let useFile = basePath('use-xjs-cli.json');
+
+        if (!fs.existsSync(useFile)) {
+            return logErrorAndExit("use-xjs-cli.json is required. run `xjs init [boot_file]`")
+        }
+
+        useFile = require(useFile);
+
+        if (!useFile.hasOwnProperty('tsc')) {
+            return logErrorAndExit("Absence of tsc commands in use-xjs-cli.json")
+        }
+        let commands = useFile.tsc;
+        const commandsIsArray = Array.isArray(commands);
+
+        if (!commandsIsArray || (commandsIsArray && !commands.length)) {
+            return logErrorAndExit("tsc commands must be an array with more than one commands in use-xjs-cli.json")
+        }
+
+        commands = commands.join(' && ')
+
+        if (build === 'build') {
+            log(commands);
+            exec(commands);
+            return log("xjs tsc build completed!");
+        } else {
+            console.log(commands)
+        }
+    },
+
     /**
      * Create new app
      * @param name
