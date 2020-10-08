@@ -10,7 +10,6 @@ const isProd = (command) => {
     return !!(typeof command === "object" && command.parent && command.parent.prod);
 };
 
-
 /**
  * If config.version is present in config then run a version check.
  */
@@ -73,7 +72,7 @@ if (!config) {
     program
         .command('tsc [build]')
         .description('Run tsc commands')
-        .action((build) => Commands.tsc(build));
+        .action((build) => Commands.tsc(config, build));
 
     program
         .command('start')

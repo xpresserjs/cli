@@ -283,18 +283,12 @@ const commands = {
     },
 
 
-    tsc(build) {
-        let useFile = basePath('use-xjs-cli.json');
-
-        if (!fs.existsSync(useFile)) {
-            return logErrorAndExit("use-xjs-cli.json is required. run `xjs init [boot_file]`")
-        }
-
-        useFile = require(useFile);
+    tsc(useFile, build) {
 
         if (!useFile.hasOwnProperty('tsc')) {
             return logErrorAndExit("Absence of tsc commands in use-xjs-cli.json")
         }
+
         let commands = useFile.tsc;
         const commandsIsArray = Array.isArray(commands);
 
