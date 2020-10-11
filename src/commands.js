@@ -329,15 +329,31 @@ const commands = {
                     return true;
                 }
             },
+
+            {
+                type: 'list',
+                name: 'lang',
+                message: 'Project Language?',
+                choices: () => (['Javascript', 'Typescript']),
+                filter(choice) {
+                    return choice.toLowerCase() === 'javascript' ? 'js' : 'ts'
+                }
+            },
+
+
             {
                 type: 'list',
                 name: 'type',
                 message: 'Project Structure?',
-                choices: [
-                    `Simple App (Hello World, No views)`,
-                    `Using Ejs Template Engine`,
-                    `Using Edge Template Engine (similar to Blade template)`,
-                ],
+                choices: ({lang}) => {
+                    return lang === 'js' ? [
+                        `Simple App (Hello World, No views)`,
+                        `Using Ejs Template Engine`,
+                        `Using Edge Template Engine (similar to Blade template)`,
+                    ] : [
+                        `Using Ejs Template Engine`,
+                    ]
+                },
                 filter(choice) {
 
                     if (choice.includes('Simple')) {
@@ -351,11 +367,14 @@ const commands = {
                     return choice;
                 }
             },
-        ]).then(({type}) => {
+        ]).then(({type, lang}) => {
             let gitUrl = 'https://github.com/xpresserjs/new-app-lite.git';
 
             if (type === 'ejs') {
-                gitUrl = 'https://github.com/xpresserjs/new-app.git';
+                gitUrl = [
+                    'https://github.com/xpresserjs/new-app.git',
+                    'https://github.com/xpresserjs/new-app-ts'
+                ][lang === 'js' ? 0 : 1];
             } else if (type === 'edge') {
                 gitUrl = 'https://github.com/xpresserjs/new-app-edge-js.git';
             }
