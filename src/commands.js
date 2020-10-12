@@ -379,7 +379,7 @@ const commands = {
 
                 gitUrl = [
                     'https://github.com/xpresserjs/new-app.git',
-                    'https://github.com/xpresserjs/new-app-ts'
+                    'https://github.com/xpresserjs/new-app-ts.git'
                 ][index];
 
             } else if (type === 'edge') {
