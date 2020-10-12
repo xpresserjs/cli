@@ -1,5 +1,4 @@
 {
-  "version": ">=1.0.29",
   "dev": {
     "main": "{{main}}",
     "start_cron": "ts-node-dev --transpile-only",
