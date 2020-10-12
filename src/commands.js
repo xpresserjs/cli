@@ -344,16 +344,12 @@ const commands = {
             {
                 type: 'list',
                 name: 'type',
-                message: 'Project Structure?',
-                choices: ({lang}) => {
-                    return lang === 'js' ? [
-                        `Simple App (Hello World, No views)`,
-                        `Using Ejs Template Engine`,
-                        `Using Edge Template Engine (similar to Blade template)`,
-                    ] : [
-                        `Using Ejs Template Engine`,
-                    ]
-                },
+                message: 'Project Boilerplate?',
+                choices: [
+                    `Simple App (Hello World, No views)`,
+                    `Using Ejs Template Engine`,
+                    `Using Edge Template Engine (similar to Blade template)`,
+                ],
                 filter(choice) {
 
                     if (choice.includes('Simple')) {
