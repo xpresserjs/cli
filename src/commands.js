@@ -368,18 +368,29 @@ const commands = {
                 }
             },
         ]).then(({type, lang}) => {
-            let gitUrl = 'https://github.com/xpresserjs/new-app-lite.git';
+            const index = lang === 'js' ? 0 : 1;
+
+            let gitUrl = [
+                'https://github.com/xpresserjs/new-app-lite.git',
+                'https://github.com/xpresserjs/new-app-lite-ts.git'
+            ][index];
 
             if (type === 'ejs') {
+
                 gitUrl = [
                     'https://github.com/xpresserjs/new-app.git',
                     'https://github.com/xpresserjs/new-app-ts'
-                ][lang === 'js' ? 0 : 1];
+                ][index];
+
             } else if (type === 'edge') {
-                gitUrl = 'https://github.com/xpresserjs/new-app-edge-js.git';
+
+                gitUrl = [
+                    'https://github.com/xpresserjs/new-app-edge-js.git',
+                    'https://github.com/xpresserjs/new-app-edge-ts.git'
+                ][index];
             }
 
-            const command = `git clone ${gitUrl} ${name}`;
+            const command = `git clone --dissociate ${gitUrl} ${name}`;
 
             log(command);
 
@@ -393,7 +404,7 @@ const commands = {
             log(`Run ${yellow(`cd ${name}`)}`);
             log(`Run ${yellow('yarn install')} or ${yellow(`npm install`)}`);
             log('After installing all dependencies....');
-            log(`Run ${yellow('node app.js')} to start app. `);
+            log(`Run ${yellow('npm run dev')} to start app. `);
         });
     },
 
