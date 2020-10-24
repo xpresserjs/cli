@@ -766,18 +766,23 @@ const commands = {
      * @param showObject
      */
     cron(isProduction = false, from = undefined, showObject = false) {
-        // const config = XjsCliConfig.get(isProduction ? 'prod' : 'dev');
-        const jobsPath = basePath(XjsCliConfig.get("jobs_path"));
-        const cronJsPath = jobsPath + '/cron.js';
+        const config = XjsCliConfig.path(isProduction ? 'prod' : 'dev');
+        const jobsPath = basePath(config.get("jobs_path", "backend/jobs"));
+        let cronJsPath = jobsPath + '/cron.js';
 
         if (!fs.existsSync(cronJsPath)) {
-            return logErrorAndExit(`cron.js not found in jobs directory: (${jobsPath})`)
+
+            // Try cron.json
+            cronJsPath = jobsPath + '/cron.json';
+
+            if (!fs.existsSync(cronJsPath)) {
+                return logErrorAndExit(`(cron.js/cron.json) not found in jobs directory: (${jobsPath})`)
+            }
         }
 
         let cronJobs = require(cronJsPath);
         // Require Node Cron
         const {CronJob} = require('cron');
-
 
         // let cronJobKeys = Object.keys(cronJobs);
         const cronCmd = basePath('cron-cmd.js');
