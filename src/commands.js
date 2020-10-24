@@ -5,7 +5,8 @@ const {
     whiteBright,
     red,
     white,
-    green
+    green,
+    magenta
 } = require('chalk');
 
 // Import Other Libraries
@@ -15,11 +16,11 @@ const path = require('path');
 const {spawn} = require('child_process');
 const {exec} = require('shelljs');
 const ObjectCollection = require("object-collection");
-const _ = ObjectCollection._;
+const _ = ObjectCollection.getLodash();
 
 
 /**
- * Xjs Npm ID
+ * Xpresser Npm ID
  * @type {string}
  */
 const xpresser = 'xpresser';
@@ -67,6 +68,16 @@ const log = (...args) => {
     args.unshift('=> ');
     console.log(cyan(...args))
 };
+
+/**
+ * Simple Log Function
+ * Using Cyan Color
+ * @param args
+ */
+// const logInfo = (...args) => {
+//     args.unshift('=> ');
+//     console.log(magenta(...args))
+// };
 
 
 /**
@@ -199,14 +210,15 @@ const getAllFiles = (path) => {
 /**
  * Loads project jobs.
  * @param {string} path
+ * @deprecated
  * @return {{}}
  */
-const loadJobs = function (path = '') {
+/*const loadJobs = function (path = '') {
 
-    /**
+    /!**
      * Defaults to 'backend/jobs'
      * Cli assumes we are making use of the xpresser framework structure.
-     */
+     *!/
     if (!path || path === '') {
         path = basePath('backend/jobs');
     }
@@ -239,7 +251,7 @@ const loadJobs = function (path = '') {
     }
 
     return $commands;
-};
+};*/
 
 
 /**
@@ -481,7 +493,7 @@ const commands = {
 
         if (env === 'prod' || env === 'production') {
             config = XjsCliConfig.get('prod');
-            const command = `${config.start_server} ${config.main}`;
+            const command = `${config["start_server"]} ${config.main}`;
             const startServer = exec(command, {silent: true});
 
             if (!startServer.stderr.trim().length) {
@@ -537,7 +549,7 @@ const commands = {
      */
     cliCommand(command, isDev = true) {
         const config = XjsCliConfig.get(isDev ? 'dev' : 'prod');
-        return `${config.start_console} ${config.main} cli ${command}`.trim();
+        return `${config["start_console"]} ${config.main} cli ${command}`.trim();
     },
 
     /**
@@ -712,6 +724,58 @@ const commands = {
 
 
     /**
+     * Call Stack
+     * @param stack
+     * @param config
+     */
+    stack(stack, config) {
+        return this.runStack(stack, config, false);
+    },
+
+
+    /**
+     * Run Stack
+     * @param stack
+     * @param useFile
+     * @param build
+     */
+    runStack(stack, useFile, build = 'build') {
+        build = build === 'build';
+
+        if (!useFile.hasOwnProperty('stacks')) {
+            return logErrorAndExit("Absence of {stacks} in use-xjs-cli.json")
+        }
+
+        let stacks = useFile.stacks;
+        let stackKey = yellowWithBars(stack),
+            stackPath = yellowWithBars(`stacks.${stack}`);
+
+        if (!stacks || !stacks.hasOwnProperty(stack)) {
+            return logErrorAndExit(`Stack ${stackPath} not found in use-xjs-cli.json`)
+        }
+
+        let stackData = stacks[stack];
+        const stackIsArray = Array.isArray(stackData);
+
+        if (!stackIsArray || (stackIsArray && !stackData.length)) {
+            return logErrorAndExit(`Stack commands for ${stackPath} must be an array with more than one commands in use-xjs-cli.json`)
+        }
+
+        let commands = stackData.join(' && ').trim();
+
+        if (build) {
+            log(`Running stack ${stackKey}`);
+
+            console.log("=>", commands);
+            exec(commands);
+            return log(`Stack ${stackKey} executed successfully!`);
+        } else {
+            console.log(commands)
+        }
+    },
+
+
+    /**
      * Run cron Job
      * @param args
      * @returns {*|void}
@@ -826,7 +890,7 @@ const commands = {
         let version = exec(`npm show ${xpresser} version`, {silent: true}).stdout.trim();
         let currentVersion = currentXjsVersion();
         if (currentVersion < version) {
-            log(`Xjs latest version is ${yellow(version)} but yours is ${whiteBright(currentVersion)}`);
+            log(`xpresser latest version is ${yellow(version)} but yours is ${whiteBright(currentVersion)}`);
             return prompt({
                 'type': 'confirm',
                 name: 'update',
@@ -840,7 +904,7 @@ const commands = {
             });
         }
 
-        log(`You already have the latest version of ${yellow('Xjs')}`);
+        log(`You already have the latest version of ${yellow('xpresser')}`);
         log(`Version: ${whiteBright(currentVersion)}`)
     },
 

@@ -28,7 +28,7 @@ program.option('-p --prod', 'Use production config.');
 
 program
     .version(packages.version)
-    .description('Xjs Framework CLI');
+    .description('XpresserJs Framework CLI');
 
 
 if (!config) {
@@ -36,7 +36,7 @@ if (!config) {
     program
         .command('new [name]')
         .alias('create')
-        .description('Create new xjs project.')
+        .description('Create new xpresser project.')
         .action(name => Commands.create(name));
 
     program
@@ -94,6 +94,17 @@ if (!config) {
         .alias('@')
         .description('Run Jobs')
         .action((name) => Commands.runJob(name));
+
+    program
+        .command('stack <stack>')
+        .description('Display stack commands.')
+        .action((stack) => Commands.stack(stack, config));
+
+    program
+        .command('run:stack <stack>')
+        .alias('@stack')
+        .description('Run stack')
+        .action((stack) => Commands.runStack(stack, config));
 
     program
         .command('make:job <name> [command]')
@@ -161,14 +172,15 @@ if (!config) {
         .action((process) => Commands.restart(process));
 
     program
-        .command('publish <plugin> <folder> [overwrite]')
+        .command('import <plugin> <folder> [overwrite]')
+        .alias('publish')
         .description('Extract a folder from it\'s plugin directory.')
         .action((plugin, folder, overwrite) => Commands.publish(plugin, folder, overwrite))
 
 
     program
         .command('check-for-update')
-        .description('Update Xjs using your desired package manager.')
+        .description('Update xpresser using your desired package manager.')
         .action(() => Commands.checkForUpdate());
 
 

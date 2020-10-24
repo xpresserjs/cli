@@ -13,6 +13,12 @@
     "stop_server": "pm2 stop",
     "start_console": "node"
   },
-  "jobs_path": "backend/jobs"
+  "jobs_path": "backend/jobs",
+  "async_cron_jobs": false,
+  "stacks": {
+    "tsc" : [
+      "tsc -p tsconfig.json"
+    ]
+  }
 }
 
