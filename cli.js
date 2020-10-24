@@ -68,12 +68,6 @@ if (!config) {
         .description('Put App in maintenance mood.')
         .action(() => Commands.down());
 
-
-    program
-        .command('tsc [build]')
-        .description('Run tsc commands')
-        .action((build) => Commands.tsc(config, build));
-
     program
         .command('start')
         .description('Start server.')
