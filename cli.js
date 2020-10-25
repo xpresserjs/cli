@@ -95,8 +95,8 @@ if (!config) {
         .action((stack) => Commands.stack(stack, config));
 
     program
-        .command('run:stack <stack>')
-        .alias('@stack')
+        .command('@stack <stack>')
+        // .alias('@stack')
         .description('Run stack')
         .action((stack) => Commands.runStack(stack, config));
 
