@@ -169,7 +169,7 @@ if (!config) {
         .command('import <plugin> <folder> [overwrite]')
         .alias('publish')
         .description('Extract a folder from it\'s plugin directory.')
-        .action((plugin, folder, overwrite) => Commands.publish(plugin, folder, overwrite))
+        .action((plugin, folder, overwrite) => Commands.import(plugin, folder, overwrite))
 
 
     program

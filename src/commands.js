@@ -933,8 +933,8 @@ const commands = {
      * @param overwrite
      * @return {*}
      */
-    publish(plugin, folder, overwrite) {
-        return this.cli(`publish ${plugin} ${folder} ${overwrite}`.trim());
+    import(plugin, folder, overwrite) {
+        return this.cli(`import ${plugin} ${folder} ${overwrite}`.trim());
     },
 
     /**
