@@ -3,11 +3,15 @@ const {
     cyan,
     yellow,
     whiteBright,
-    red,
     white,
     green,
-    magenta
 } = require('chalk');
+
+// Functions
+const {
+    basePath, log, logErrorAndExit, cliPath, logError,
+    yellowWithBars, currentXjsVersion, updateXpresser
+} = require("./Functions");
 
 // Import Other Libraries
 const {prompt} = require('inquirer');
@@ -15,6 +19,8 @@ const fs = require('fs');
 const path = require('path');
 const {spawn} = require('child_process');
 const {exec} = require('shelljs');
+const Questionnaire = require("./Questionaire");
+
 const ObjectCollection = require("object-collection");
 const _ = ObjectCollection.getLodash();
 
@@ -25,233 +31,16 @@ const _ = ObjectCollection.getLodash();
  */
 const xpresser = 'xpresser';
 
+// Documentation links
+const docs = {
+    repl: 'https://xpresserjs.com/cli/repl.html'
+}
 
 /**
  * Set DefaultConfig to provide values for undefined keys.
  */
 const defaultConfig = require('../factory/use-xjs-cli.js');
-
-
-/**
- * Get Base path
- *
- * Same as current working directory.
- * @param path
- * @return {string|*}
- */
-const basePath = (path = '') => {
-    if (path.length) {
-        return process.cwd() + '/' + path;
-    }
-    return process.cwd()
-};
-
-
-/**
- * Xjs Cli Path
- *
- * Used to access files where-ever xpresser-cli is installed.
- * @param $path
- * @return {string}
- */
-const cliPath = ($path = '') => {
-    return path.resolve(__dirname + '/../' + $path)
-};
-
-
-/**
- * Simple Log Function
- * Using Cyan Color
- * @param args
- */
-const log = (...args) => {
-    args.unshift('=> ');
-    console.log(cyan(...args))
-};
-
-/**
- * Simple Log Function
- * Using Cyan Color
- * @param args
- */
-// const logInfo = (...args) => {
-//     args.unshift('=> ');
-//     console.log(magenta(...args))
-// };
-
-
-/**
- * Error Log Function
- * Using Red Color
- * @param args
- */
-const logError = (...args) => {
-    console.error(red(...args))
-};
-
-
-/**
- * LogError And Exit
- *
- * logs error then exists program.
- * @param args
- */
-const logErrorAndExit = (...args) => {
-
-    if (args.length) {
-        args.unshift('Error: ');
-        logError(...args);
-    }
-
-    process.exit();
-};
-
-// Define Colors with bars helper function
-const yellowWithBars = (str) => yellow('{' + str.trim() + '}');
-
-/**
- * Get current XjsVersion from package.json
- * @return {string}
- */
-const currentXjsVersion = () => {
-    let packageDotJson = require(basePath('package.json'));
-    let packages = packageDotJson['dependencies'];
-    let packagesKeys = Object.keys(packages);
-    let version = '0.0.0';
-
-    for (let i = 0; i < packagesKeys.length; i++) {
-        const packagesKey = packagesKeys[i];
-        if (packagesKey === xpresser) {
-            version = packages[packagesKey];
-            break;
-        }
-    }
-
-    if (version.substr(0, 1) === '^') {
-        version = version.substr(1);
-    }
-
-    return version;
-};
-
-/**
- * Check if xpresser project uses yarn.
- * @return {boolean}
- * @constructor
- */
-const HasYarnLock = () => fs.existsSync(basePath('yarn.lock'));
-
-
-/**
- * Update project using yarn or npm
- * @return {*}
- */
-const updateXpresser = () => {
-    let command = `npm install ${xpresser} --save --no-audit --silent`;
-
-    if (HasYarnLock()) {
-
-        log('Using Yarn...');
-        command = `yarn add ${xpresser} --silent`
-
-    } else {
-
-        log('Using Npm...');
-        // if NPM remove xpresser first
-        exec(`npm remove ${xpresser}`, {silent: true})
-
-    }
-
-    console.log(white('............'));
-    log('Updating....');
-    console.log(white('............'));
-
-    exec(command);
-
-    console.log(white('............'));
-    log(`${xpresser} updated successfully.`);
-};
-
-
-/**
- * Get All files in a given path.
- * @param path
- * @returns {Array}
- */
-const getAllFiles = (path) => {
-    let list = [];
-
-    if (fs.existsSync(path)) {
-        const Files = fs.readdirSync(path);
-
-        for (let i = 0; i < Files.length; i++) {
-
-            const File = Files[i];
-            const FullPath = path + '/' + File;
-
-            if (fs.lstatSync(FullPath).isDirectory()) {
-
-                const files = getAllFiles(FullPath);
-                for (let j = 0; j < files.length; j++) {
-                    const file = files[j];
-                    list.push(file);
-                }
-
-            } else {
-                list.push(FullPath);
-            }
-        }
-    }
-
-    return list;
-};
-
-
-/**
- * Loads project jobs.
- * @param {string} path
- * @deprecated
- * @return {{}}
- */
-/*const loadJobs = function (path = '') {
-
-    /!**
-     * Defaults to 'backend/jobs'
-     * Cli assumes we are making use of the xpresser framework structure.
-     *!/
-    if (!path || path === '') {
-        path = basePath('backend/jobs');
-    }
-
-    const $commands = {};
-
-
-    const files = getAllFiles(path);
-
-    for (const file of files) {
-        const jobFile = file.replace(path, '');
-        const job = require(file);
-
-        if (typeof job !== 'object') {
-            logErrorAndExit('Job: {' + jobFile + '} did not return object!');
-
-            if (job.hasOwnProperty('command') || !job.hasOwnProperty('handler')) {
-                logErrorAndExit('Job: {' + jobFile + '} is not structured properly!')
-            }
-        }
-
-        if (typeof job.schedule === "function") {
-            job.schedule = job.schedule();
-        }
-
-        if (typeof job.schedule === "string") {
-            job.path = file;
-            $commands[job.command] = job;
-        }
-    }
-
-    return $commands;
-};*/
+const {jsonFromFile} = require("./Functions");
 
 
 /**
@@ -392,29 +181,10 @@ const commands = {
     },
 
     /**
-     * Installs Required Tools
-     * --- Pm2
-     *
-     * @deprecated
-     */
-    // installProdTools() {
-    //     log(`Checking if ${yellow('pm2')} exists...`);
-    //
-    //     let hasPm2 = exec('npm ls -g pm2', {silent: true}).stdout;
-    //
-    //     if (!hasPm2.includes('pm2@')) {
-    //         log(`Installing ${yellow('pm2')} globally.`);
-    //         exec('npm install pm2 -g', {silent: true})
-    //     }
-    //
-    //     log('All production tools are installed!');
-    // },
-
-    /**
      * Checks if current project has xpresser.
      * @param trueOrFalse
      * @param $returnData
-     * @returns {void|boolean|*}
+     * @returns {void|boolean|ObjectCollection}
      */
     checkIfInXjsFolder(trueOrFalse = false, $returnData = false) {
 
@@ -863,7 +633,6 @@ const commands = {
 
     /**
      * Check for Xpresser Update in project
-     * @returns {PromiseLike<T> | Promise<T>}
      */
     checkForUpdate() {
         log('Checking npm registry for version update...');
@@ -1043,8 +812,99 @@ const commands = {
                 logErrorAndExit(e.message);
             }
         });
+    },
+
+    /**
+     * Start Repl
+     * @param replFile
+     * @param isProd
+     * @return {Promise<void>}
+     */
+    async repl(replFile, isProd) {
+        // Modify use-xjs-cli.json
+        const xjsConfigPath = basePath('use-xjs-cli.json');
+        const xjsConfig = new ObjectCollection(jsonFromFile(xjsConfigPath) || {})
+
+        if (!replFile) replFile = xjsConfig.path(isProd ? 'prod' : 'dev').get('repl');
+        if (!replFile) replFile = 'repl.js';
+
+
+        const xpresserReplPath = basePath(replFile);
+        if (fs.existsSync(xpresserReplPath)) {
+            // include repl
+            require(xpresserReplPath);
+
+        } else {
+            logError(`ReplFile (${replFile}) not found!`)
+
+            if (isProd) return;
+
+            const answer = await Questionnaire.yesOrNo(`Would you prefer us to automatically create this repl file for you?`);
+
+            if (!answer) {
+                return log(`You can view Repl Manual Setup Documentation here ${docs.repl}`)
+            }
+
+            const hasConfigFile = await Questionnaire.yesOrNo(`Is your project config directly exported in a file?`);
+            let configPath;
+
+            if (hasConfigFile) {
+                configPath = await Questionnaire.ask('Relative path to your project config file?', (input) => {
+                    if (!input) {
+                        return "Path to your config file is required!"
+                    }
+
+                    const fullPath = path.resolve(input);
+                    const fileExists = fs.existsSync(fullPath);
+
+                    if (fileExists && fs.statSync(fullPath).isFile()) {
+                        return true;
+                    } else {
+                        return `File not found at (${fullPath})`;
+                    }
+                });
+            }
+
+            try {
+
+                if (hasConfigFile) {
+                    let replWithConfig = fs.readFileSync(cliPath('factory/repl_with_config.js')).toString();
+                    replWithConfig = replWithConfig.replace('{{configFile}}', configPath);
+
+                    fs.writeFileSync(
+                        basePath('repl.js'),
+                        replWithConfig
+                    )
+
+                    require(basePath('repl.js'));
+                } else {
+                    fs.copyFileSync(
+                        cliPath('factory/repl.js'),
+                        basePath('repl.js'),
+                    )
+                }
+
+
+                xjsConfig.path('dev').set('repl', 'repl.js')
+                xjsConfig.path('prod').set('repl', 'repl.js')
+
+                fs.writeFileSync(
+                    xjsConfigPath,
+                    xjsConfig.toJson(null, 2)
+                )
+
+            } catch (e) {
+                logError(`An error occurred while copying factory repl file.`);
+                return logErrorAndExit(`You can view Repl Manual Setup Documentation here ${docs.repl}`)
+            }
+
+            if (!hasConfigFile) {
+                log(`(${replFile}) created successfully.`)
+                log(`${yellowWithBars('Setup your repl file')} and Re-run ${yellowWithBars('xjs repl')}`)
+                log(`Documentation: ${docs.repl}`)
+            }
+        }
     }
 };
-
 
 module.exports = commands;

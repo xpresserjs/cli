@@ -1,7 +1,7 @@
-#!/usr/bin/env node
+#!/usr/bin/env node --experimental-repl-await
 const {program} = require('commander');
 const {red} = require('chalk');
-const Commands = require('./src/commands');
+const Commands = require('./src/Commands');
 let packages = require('./package.json');
 let _ = require("object-collection")._;
 
@@ -58,6 +58,12 @@ if (!config) {
     //     .action(() => Commands.installProdTools());
 
 } else {
+
+    program
+        .command('repl [repFile]')
+        .description('Start Repl')
+        .action((repFile, command) => Commands.repl(repFile, isProd(command)));
+
     program
         .command('up')
         .description('Remove App from maintenance mood.')

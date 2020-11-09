@@ -17,10 +17,10 @@
   "license": "ISC",
   "dependencies": {
     "chalk": "^4.1.0",
-    "commander": "^6.1.0",
+    "commander": "^6.2.0",
     "cron": "^1.8.2",
     "inquirer": "^7.3.3",
-    "object-collection": "^1.0.29",
+    "object-collection": "^1.0.30",
     "shelljs": "^0.8.4"
   },
   "devDependencies": {},
