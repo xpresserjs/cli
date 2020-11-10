@@ -1,7 +1,7 @@
-#!/usr/bin/env node
+#!/usr/bin/env node --experimental-repl-await
 const {program} = require('commander');
 const {red} = require('chalk');
-const Commands = require('./src/commands');
+const Commands = require('./src/Commands');
 let packages = require('./package.json');
 let _ = require("object-collection")._;
 
@@ -9,7 +9,6 @@ let config = Commands.checkIfInXjsFolder(true, true);
 const isProd = (command) => {
     return !!(typeof command === "object" && command.parent && command.parent.prod);
 };
-
 
 /**
  * If config.version is present in config then run a version check.
@@ -29,7 +28,7 @@ program.option('-p --prod', 'Use production config.');
 
 program
     .version(packages.version)
-    .description('Xjs Framework CLI');
+    .description('XpresserJs Framework CLI');
 
 
 if (!config) {
@@ -37,7 +36,7 @@ if (!config) {
     program
         .command('new [name]')
         .alias('create')
-        .description('Create new xjs project.')
+        .description('Create new xpresser project.')
         .action(name => Commands.create(name));
 
     program
@@ -50,12 +49,21 @@ if (!config) {
         .description('Create a nginx config file for your project in this directory.')
         .action(() => Commands.nginxConf());
 
-    program
-        .command('install-prod-tools')
-        .description('Install Production tools.')
-        .action(() => Commands.installProdTools());
+    /**
+     * @deprecated
+     */
+    // program
+    //     .command('install-prod-tools')
+    //     .description('Install Production tools.')
+    //     .action(() => Commands.installProdTools());
 
 } else {
+
+    program
+        .command('repl [repFile]')
+        .description('Start Repl')
+        .action((repFile, command) => Commands.repl(repFile, isProd(command)));
+
     program
         .command('up')
         .description('Remove App from maintenance mood.')
@@ -86,6 +94,17 @@ if (!config) {
         .alias('@')
         .description('Run Jobs')
         .action((name) => Commands.runJob(name));
+
+    program
+        .command('stack <stack>')
+        .description('Display stack commands.')
+        .action((stack) => Commands.stack(stack, config));
+
+    program
+        .command('@stack <stack>')
+        // .alias('@stack')
+        .description('Run stack')
+        .action((stack) => Commands.runStack(stack, config));
 
     program
         .command('make:job <name> [command]')
@@ -153,14 +172,15 @@ if (!config) {
         .action((process) => Commands.restart(process));
 
     program
-        .command('publish <plugin> <folder>')
+        .command('import <plugin> <folder> [overwrite]')
+        .alias('publish')
         .description('Extract a folder from it\'s plugin directory.')
-        .action((plugin, folder) => Commands.publish(plugin, folder))
+        .action((plugin, folder, overwrite) => Commands.import(plugin, folder, overwrite))
 
 
     program
         .command('check-for-update')
-        .description('Update Xjs using your desired package manager.')
+        .description('Update xpresser using your desired package manager.')
         .action(() => Commands.checkForUpdate());
 
 
