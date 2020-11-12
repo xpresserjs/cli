@@ -1,4 +1,4 @@
-#!/usr/bin/env node --experimental-repl-await
+#!/usr/bin/env -S node --experimental-repl-await
 const {program} = require('commander');
 const {red} = require('chalk');
 const Commands = require('./src/Commands');
