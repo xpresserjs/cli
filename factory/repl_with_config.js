@@ -3,18 +3,17 @@ const {XpresserRepl} = require('xpresser');
 const repl = new XpresserRepl('{{configFile}}');
 
 /**
- * Add custom context to repl
- */
-// repl.addContext('customContent', 'customContent Value!');
-
-
-/**
  * Start The Repl Server
  * By Booting xpresser using your config.
+ *
+ * repl.server is now defined.
+ *
+ * @param $ - Current xpresser instance.
  */
 repl.start(($) => {
-    // $ (i.e xpresserInstance) is passed as the only argument.
-    // repl.server is now defined.
-    // Any Customization to the repl server directly can be done here.
+    // Any Customization to the repl server `repl.server` directly can be done here.
+
+    // Add Example Context to repl
+    repl.addContext('example', () => 'Example content, modify in repl file.');
 });
 
