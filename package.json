@@ -4,7 +4,8 @@
   "description": "Xpresser Framework Cli",
   "main": "cli.js",
   "bin": {
-    "xjs": "./cli.js"
+    "xjs": "./cli.js",
+    "xjs-await": "./cli-await.js"
   },
   "keywords": [
     "xpresser",
