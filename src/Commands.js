@@ -264,7 +264,7 @@ const commands = {
      */
     cli(command, isDev = true, exit = true) {
         command = this.cliCommand(command, isDev);
-        return exec(command);
+        return exec(command, null, {stdio: "inherit"});
     },
 
 
@@ -294,7 +294,7 @@ const commands = {
      */
     cliCommand(command, isDev = true) {
         const config = XjsCliConfig.get(isDev ? 'dev' : 'prod');
-        return `${config["start_console"]} ${config.main} cli ${command}`.trim();
+        return `${config["start_console"]} ${config.main} cli ${command} --from-xjs-cli`.trim();
     },
 
     /**
