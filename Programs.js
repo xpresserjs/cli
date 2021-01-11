@@ -234,7 +234,7 @@ if (!config) {
 					if (!action) action = extension['command'].split(" ")[0];
 					
 					let command = (action + ' ' + commands.join(' ')).trim();
-					return Commands.cli(command);
+					return Commands.cli(command, true, true, false);
 				});
 			}
 			

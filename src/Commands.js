@@ -261,9 +261,10 @@ const commands = {
      * @param command
      * @param isDev
      * @param exit
+     * @param fromXjsCli
      */
-    cli(command, isDev = true, exit = true) {
-        command = this.cliCommand(command, isDev);
+    cli(command, isDev = true, exit = true, fromXjsCli = true) {
+        command = this.cliCommand(command, isDev, fromXjsCli);
         return exec(command, null, {stdio: "inherit"});
     },
 
@@ -290,11 +291,12 @@ const commands = {
      * Command generator helper.
      * @param command
      * @param isDev
+     * @param fromXjsCli
      * @returns {string}
      */
-    cliCommand(command, isDev = true) {
+    cliCommand(command, isDev = true, fromXjsCli = true) {
         const config = XjsCliConfig.get(isDev ? 'dev' : 'prod');
-        return `${config["start_console"]} ${config.main} cli ${command} --from-xjs-cli`.trim();
+        return `${config["start_console"]} ${config.main} cli ${command} ${fromXjsCli ? '--from-xjs-cli': ''}`.trim();
     },
 
     /**
