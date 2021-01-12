@@ -3,7 +3,7 @@
 *
 * Runs the `command` declared above to start your cron jobs in a child processes.
 */
-const ProcessManager = require('xpresser/src/Console/ProcessManager');
+const ProcessManager = require('xpresser/dist/src/Console/ProcessManager');
 const processManager = new ProcessManager(__dirname);
 
 // Cron Command
