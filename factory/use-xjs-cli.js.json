@@ -2,7 +2,7 @@
   "dev": {
     "main": "{{main}}",
     "start_cron": "node",
-    "start_server": "nodemon",
+    "start_server": "npx nodemon",
     "start_console": "node",
     "jobs_path": "backend/jobs"
   },
