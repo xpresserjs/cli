@@ -1,47 +1,45 @@
 // Import Console Colors
-const {
-    cyan,
-    yellow,
-    whiteBright,
-    white,
-    green,
-} = require('chalk');
+const { cyan, yellow, whiteBright, white, green } = require("chalk");
 
 // Functions
 const {
-    basePath, log, logErrorAndExit, cliPath, logError,
-    yellowWithBars, currentXjsVersion, updateXpresser
+    basePath,
+    log,
+    logErrorAndExit,
+    cliPath,
+    logError,
+    yellowWithBars,
+    currentXjsVersion,
+    updateXpresser,
 } = require("./Functions");
 
 // Import Other Libraries
-const {prompt} = require('inquirer');
-const fs = require('fs');
-const path = require('path');
-const {spawn} = require('child_process');
-const {exec} = require('shelljs');
+const { prompt } = require("inquirer");
+const fs = require("fs");
+const path = require("path");
+const { spawn } = require("child_process");
+const { exec } = require("shelljs");
 const Questionnaire = require("./Questionaire");
 
 const ObjectCollection = require("object-collection");
 const _ = ObjectCollection.getLodash();
 
-
 /**
  * Xpresser Npm ID
  * @type {string}
  */
-const xpresser = 'xpresser';
+const xpresser = "xpresser";
 
 // Documentation links
 const docs = {
-    repl: 'https://xpresserjs.com/cli/repl.html'
-}
+    repl: "https://xpresserjs.com/cli/repl.html",
+};
 
 /**
  * Set DefaultConfig to provide values for undefined keys.
  */
-const defaultConfig = require('../factory/use-xjs-cli.js');
-const {jsonFromFile} = require("./Functions");
-
+const defaultConfig = require("../factory/use-xjs-cli.js");
+const { jsonFromFile } = require("./Functions");
 
 /**
  * List Of Commands
@@ -51,36 +49,35 @@ const commands = {
      * Create a cli config file.
      * @param file
      */
-    init(file = 'xpresser.js') {
-        let lang = 'js';
-        const UseFile = basePath('use-xjs-cli.json');
+    init(file = "xpresser.js") {
+        let lang = "js";
+        const UseFile = basePath("use-xjs-cli.json");
 
         if (fs.existsSync(UseFile)) {
-            return logErrorAndExit('Init file already exists.');
+            return logErrorAndExit("Init file already exists.");
         }
 
         if (!fs.existsSync(basePath(file))) {
-            return logErrorAndExit(`File: {${file}} not found!`)
+            return logErrorAndExit(`File: {${file}} not found!`);
         }
 
-        let jsonPath = cliPath('factory/use-xjs-cli.js.json');
+        let jsonPath = cliPath("factory/use-xjs-cli.js.json");
         let fileToJs = file;
 
-
-        if (file.substr(-3) === '.ts') {
-            lang = 'ts';
-            jsonPath = cliPath('factory/use-xjs-cli.ts.json');
-            fileToJs = file.substr(0, file.length - 3) + '.js';
+        if (file.substr(-3) === ".ts") {
+            lang = "ts";
+            jsonPath = cliPath("factory/use-xjs-cli.ts.json");
+            fileToJs = file.substr(0, file.length - 3) + ".js";
         }
 
         let fileData = fs.readFileSync(jsonPath).toString();
 
-        fileData = fileData.replace(new RegExp('{{main}}', 'g'), file);
-        fileData = fileData.replace('{{main_to_js}}', fileToJs);
+        fileData = fileData.replace(new RegExp("{{main}}", "g"), file);
+        fileData = fileData.replace("{{main_to_js}}", fileToJs);
 
         fs.writeFileSync(UseFile, fileData);
 
-        log("init file created.")
+        log("init file created.");
     },
 
     /**
@@ -89,94 +86,102 @@ const commands = {
      * @returns *
      */
     create(name) {
+        const projectPath = path.resolve(`./${name}`);
+        if (fs.existsSync(projectPath)) {
+            logError(`Folder ${yellow(name)} already exists`);
+            return logError(`@ ${projectPath}`);
+        }
+
         return prompt([
             {
-                type: 'input',
-                name: 'name',
-                message: 'Name of new project?',
+                type: "input",
+                name: "name",
+                message: "Name of new project?",
                 when() {
                     return name === undefined;
                 },
                 validate(input) {
-                    if (typeof input !== "string" || (input.length < 3)) {
-                        return "Provide a project name."
+                    if (typeof input !== "string" || input.length < 3) {
+                        return "Provide a project name.";
                     }
                     name = input;
                     return true;
-                }
+                },
             },
 
             {
-                type: 'list',
-                name: 'lang',
-                message: 'Project Language?',
-                choices: () => (['Javascript', 'Typescript']),
+                type: "list",
+                name: "lang",
+                message: "Project Language?",
+                choices: () => ["Javascript", "Typescript"],
                 filter(choice) {
-                    return choice.toLowerCase() === 'javascript' ? 'js' : 'ts'
-                }
+                    return choice.toLowerCase() === "javascript" ? "js" : "ts";
+                },
             },
 
-
             {
-                type: 'list',
-                name: 'type',
-                message: 'Project Boilerplate?',
+                type: "list",
+                name: "type",
+                message: "Project Boilerplate?",
                 choices: [
                     `Simple App (Hello World, No views)`,
                     `Using Ejs Template Engine`,
                     `Using Edge Template Engine (similar to Blade template)`,
                 ],
                 filter(choice) {
-
-                    if (choice.includes('Simple')) {
-                        choice = 'simple'
-                    } else if (choice.includes('Ejs')) {
-                        choice = 'ejs'
-                    } else if (choice.includes('Edge')) {
-                        choice = 'edge'
+                    if (choice.includes("Simple")) {
+                        choice = "simple";
+                    } else if (choice.includes("Ejs")) {
+                        choice = "ejs";
+                    } else if (choice.includes("Edge")) {
+                        choice = "edge";
                     }
 
                     return choice;
-                }
+                },
             },
-        ]).then(({type, lang}) => {
-            const index = lang === 'js' ? 0 : 1;
+        ]).then(({ type, lang }) => {
+            const index = lang === "js" ? 0 : 1;
 
             let gitUrl = [
-                'https://github.com/xpresserjs/new-app-lite.git',
-                'https://github.com/xpresserjs/new-app-lite-ts.git'
+                "https://github.com/xpresserjs/new-app-lite.git",
+                "https://github.com/xpresserjs/new-app-lite-ts.git",
             ][index];
 
-            if (type === 'ejs') {
-
+            if (type === "ejs") {
                 gitUrl = [
-                    'https://github.com/xpresserjs/new-app.git',
-                    'https://github.com/xpresserjs/new-app-ts.git'
+                    "https://github.com/xpresserjs/new-app.git",
+                    "https://github.com/xpresserjs/new-app-ts.git",
                 ][index];
-
-            } else if (type === 'edge') {
-
+            } else if (type === "edge") {
                 gitUrl = [
-                    'https://github.com/xpresserjs/new-app-edge-js.git',
-                    'https://github.com/xpresserjs/new-app-edge-ts.git'
+                    "https://github.com/xpresserjs/new-app-edge-js.git",
+                    "https://github.com/xpresserjs/new-app-edge-ts.git",
                 ][index];
             }
 
-            const command = `git clone --dissociate ${gitUrl} ${name}`;
+            const command = `git clone ${gitUrl} ${name}`;
 
             log(command);
 
             exec(command);
 
-            console.log(white('..........'));
-            console.log(green(`Run the following commands to ${whiteBright('start')} your app.`));
-            console.log(white('..........'));
+            // Clear .git folder after clone
+            const dotGitFolder = `${projectPath}/.git`;
+            if (fs.existsSync(dotGitFolder)) {
+                exec(`rm -rf ${dotGitFolder}`);
+            }
 
+            console.log(white(".........."));
+            console.log(
+                green(`Run the following commands to ${whiteBright("start")} your app.`)
+            );
+            console.log(white(".........."));
 
             log(`Run ${yellow(`cd ${name}`)}`);
-            log(`Run ${yellow('yarn install')} or ${yellow(`npm install`)}`);
-            log('After installing all dependencies....');
-            log(`Run ${yellow('npm run dev')} to start app. `);
+            log(`Run ${yellow("yarn install")} or ${yellow(`npm install`)}`);
+            log("After installing all dependencies....");
+            log(`Run ${yellow("npm run dev")} to start app. `);
         });
     },
 
@@ -187,18 +192,15 @@ const commands = {
      * @returns {void|boolean|ObjectCollection}
      */
     checkIfInXjsFolder(trueOrFalse = false, $returnData = false) {
-
         if (typeof XjsCliConfig !== "undefined") {
-
             if (trueOrFalse) {
                 return true;
             } else if ($returnData) {
                 return XjsCliConfig;
             }
-
         }
 
-        let appHasXjs = basePath('use-xjs-cli.json');
+        let appHasXjs = basePath("use-xjs-cli.json");
 
         if (fs.existsSync(appHasXjs)) {
             if ($returnData) {
@@ -206,14 +208,15 @@ const commands = {
                     let config = require(appHasXjs);
                     if (typeof config === "object") {
                         config = _.merge(defaultConfig, config);
-                        global['XjsCliConfig'] = new ObjectCollection(config);
+                        global["XjsCliConfig"] = new ObjectCollection(config);
 
                         if (
-                            !XjsCliConfig.has('dev.main')
-                            ||
-                            !XjsCliConfig.has('prod.main')
+                            !XjsCliConfig.has("dev.main") ||
+                            !XjsCliConfig.has("prod.main")
                         ) {
-                            return logErrorAndExit(" No development/production settings in use-xjs-cli.json");
+                            return logErrorAndExit(
+                                " No development/production settings in use-xjs-cli.json"
+                            );
                         } else {
                             return config;
                         }
@@ -223,34 +226,33 @@ const commands = {
                 }
             }
         } else {
-            const msg = 'Xpresser init file not found in this folder.';
+            const msg = "Xpresser init file not found in this folder.";
             return trueOrFalse ? false : logErrorAndExit(msg);
         }
-
     },
 
     /**
      * Start Server
      * @param env
      */
-    start(env = 'dev') {
+    start(env = "dev") {
         let config = XjsCliConfig;
 
-        if (env === 'prod' || env === 'production') {
-            config = XjsCliConfig.get('prod');
+        if (env === "prod" || env === "production") {
+            config = XjsCliConfig.get("prod");
             const command = `${config["start_server"]} ${config.main}`;
-            const startServer = exec(command, {silent: true});
+            const startServer = exec(command, { silent: true });
 
             if (!startServer.stderr.trim().length) {
                 log(command);
-                log('Server started.');
+                log("Server started.");
             } else {
                 logErrorAndExit(startServer.stderr);
             }
         } else {
-            config = XjsCliConfig.get('dev');
-            let main = config['main'];
-            let command = config['start_server'];
+            config = XjsCliConfig.get("dev");
+            let main = config["main"];
+            let command = config["start_server"];
 
             exec(command.includes(main) ? command : `${command} ${main}`);
         }
@@ -265,9 +267,8 @@ const commands = {
      */
     cli(command, isDev = true, exit = true, fromXjsCli = true) {
         command = this.cliCommand(command, isDev, fromXjsCli);
-        return exec(command, null, {stdio: "inherit"});
+        return exec(command, null, { stdio: "inherit" });
     },
-
 
     /**
      * Run CLi Commands in shell
@@ -277,13 +278,13 @@ const commands = {
      */
     cliSpawn(command, isDev = true, exit = true) {
         command = this.cliCommand(command, isDev);
-        const $commands = command.trim().split(' ');
+        const $commands = command.trim().split(" ");
         const [, ...$afterFirstCommand] = $commands;
         // return spawn($commands[0], $afterFirstCommand);
         const $process = spawn($commands[0], $afterFirstCommand);
 
-        $process.stdout.on('data', (msg) => {
-            console.log(msg.toString().trim())
+        $process.stdout.on("data", (msg) => {
+            console.log(msg.toString().trim());
         });
     },
 
@@ -295,8 +296,10 @@ const commands = {
      * @returns {string}
      */
     cliCommand(command, isDev = true, fromXjsCli = true) {
-        const config = XjsCliConfig.get(isDev ? 'dev' : 'prod');
-        return `${config["start_console"]} ${config.main} cli ${command} ${fromXjsCli ? '--from-xjs-cli': ''}`.trim();
+        const config = XjsCliConfig.get(isDev ? "dev" : "prod");
+        return `${config["start_console"]} ${config.main} cli ${command} ${
+            fromXjsCli ? "--from-xjs-cli" : ""
+        }`.trim();
     },
 
     /**
@@ -306,12 +309,11 @@ const commands = {
      * @returns {*}
      */
     routes(search, query) {
-        if (!search) search = '';
-        if (!query) query = '';
+        if (!search) search = "";
+        if (!query) query = "";
 
-        return this.cli(`routes ${search} ${query}`)
+        return this.cli(`routes ${search} ${query}`);
     },
-
 
     /**
      * Remove App from maintenance mood
@@ -335,7 +337,7 @@ const commands = {
      * @returns {*|void}
      */
     makeView(name) {
-        return this.cli("make:view " + name)
+        return this.cli("make:view " + name);
     },
 
     /**
@@ -346,39 +348,36 @@ const commands = {
      */
     makeController(name, options) {
         let $type = undefined;
-        const $types = _.pick(options, [
-            'class', 'object', 'services'
-        ]);
+        const $types = _.pick(options, ["class", "object", "services"]);
 
         if ($types["object"]) {
-            $type = "object"
+            $type = "object";
         } else if ($types["class"]) {
-            $type = "class"
+            $type = "class";
         } else if ($types["services"]) {
-            $type = "services"
+            $type = "services";
         }
-
 
         return prompt([
             {
-                type: 'input',
-                name: 'name',
-                message: 'Name of new controller?',
+                type: "input",
+                name: "name",
+                message: "Name of new controller?",
                 when() {
                     return name === undefined;
                 },
                 validate(input) {
-                    if (typeof input !== "string" || (input.length < 1)) {
-                        return "Provide a controller name."
+                    if (typeof input !== "string" || input.length < 1) {
+                        return "Provide a controller name.";
                     }
                     name = input;
                     return true;
-                }
+                },
             },
             {
-                type: 'list',
-                name: 'type',
-                message: 'Controller Type?',
+                type: "list",
+                name: "type",
+                message: "Controller Type?",
                 choices: [
                     `Controller Class`,
                     `Controller Object`,
@@ -388,24 +387,24 @@ const commands = {
                     return $type === undefined;
                 },
                 filter(choice) {
-                    if (choice.includes('Class')) {
-                        choice = 'class'
-                    } else if (choice.includes('Object')) {
-                        choice = 'object'
-                    } else if (choice.includes('Services')) {
-                        choice = 'services'
+                    if (choice.includes("Class")) {
+                        choice = "class";
+                    } else if (choice.includes("Object")) {
+                        choice = "object";
+                    } else if (choice.includes("Services")) {
+                        choice = "services";
                     }
                     return choice;
-                }
-            }
-        ]).then(({type}) => {
+                },
+            },
+        ]).then(({ type }) => {
             if (type) $type = type;
-            let command = 'make:controller';
+            let command = "make:controller";
 
-            if ($type === 'object') {
-                command = 'make:controller_object'
-            } else if ($type === 'services') {
-                command = 'make:controller_services'
+            if ($type === "object") {
+                command = "make:controller_object";
+            } else if ($type === "services") {
+                command = "make:controller_services";
             }
 
             return this.cli(`${command} ${name}`);
@@ -422,7 +421,7 @@ const commands = {
      * @returns {*|void}
      */
     makeModel(...args) {
-        return this.cli('make:model ' + args.join(' '))
+        return this.cli("make:model " + args.join(" "));
     },
 
     /**
@@ -431,7 +430,7 @@ const commands = {
      * @returns {*|void}
      */
     makeMiddleware(name) {
-        return this.cli('make:middleware ' + name)
+        return this.cli("make:middleware " + name);
     },
 
     /**
@@ -441,7 +440,7 @@ const commands = {
      * @param command
      */
     makeJob(name, command) {
-        return this.cli(`make:job ${name} ${command}`)
+        return this.cli(`make:job ${name} ${command}`);
     },
 
     /**
@@ -457,7 +456,7 @@ const commands = {
 
         const command = `make:event ${name} ${namespace}`.trim();
 
-        return this.cli(command)
+        return this.cli(command);
     },
 
     /**
@@ -466,9 +465,8 @@ const commands = {
      * @returns {*|void}
      */
     runJob(args) {
-        return this.cli('@' + args.join(' '))
+        return this.cli("@" + args.join(" "));
     },
-
 
     /**
      * Call Stack
@@ -479,18 +477,17 @@ const commands = {
         return this.runStack(stack, config, false);
     },
 
-
     /**
      * Run Stack
      * @param stack
      * @param useFile
      * @param build
      */
-    runStack(stack, useFile, build = 'build') {
-        build = build === 'build';
+    runStack(stack, useFile, build = "build") {
+        build = build === "build";
 
-        if (!useFile.hasOwnProperty('stacks')) {
-            return logErrorAndExit("Absence of {stacks} in use-xjs-cli.json")
+        if (!useFile.hasOwnProperty("stacks")) {
+            return logErrorAndExit("Absence of {stacks} in use-xjs-cli.json");
         }
 
         let stacks = useFile.stacks;
@@ -498,17 +495,19 @@ const commands = {
             stackPath = yellowWithBars(`stacks.${stack}`);
 
         if (!stacks || !stacks.hasOwnProperty(stack)) {
-            return logErrorAndExit(`Stack ${stackPath} not found in use-xjs-cli.json`)
+            return logErrorAndExit(`Stack ${stackPath} not found in use-xjs-cli.json`);
         }
 
         let stackData = stacks[stack];
         const stackIsArray = Array.isArray(stackData);
 
         if (!stackIsArray || (stackIsArray && !stackData.length)) {
-            return logErrorAndExit(`Stack commands for ${stackPath} must be an array with more than one commands in use-xjs-cli.json`)
+            return logErrorAndExit(
+                `Stack commands for ${stackPath} must be an array with more than one commands in use-xjs-cli.json`
+            );
         }
 
-        let commands = stackData.join(' && ').trim();
+        let commands = stackData.join(" && ").trim();
 
         if (build) {
             log(`Running stack ${stackKey}`);
@@ -517,10 +516,9 @@ const commands = {
             exec(commands);
             return log(`Stack ${stackKey} executed successfully!`);
         } else {
-            console.log(commands)
+            console.log(commands);
         }
     },
-
 
     /**
      * Run cron Job
@@ -528,7 +526,7 @@ const commands = {
      * @returns {*|void}
      */
     spawnJob(args) {
-        return this.cliSpawn('@' + args.join(' '))
+        return this.cliSpawn("@" + args.join(" "));
     },
 
     /**
@@ -538,115 +536,124 @@ const commands = {
      * @param showObject
      */
     cron(isProduction = false, from = undefined, showObject = false) {
-        const config = XjsCliConfig.path(isProduction ? 'prod' : 'dev');
+        const config = XjsCliConfig.path(isProduction ? "prod" : "dev");
         const jobsPath = basePath(config.get("jobs_path", "backend/jobs"));
-        let cronJsPath = jobsPath + '/cron.json';
+        let cronJsPath = jobsPath + "/cron.json";
 
         if (!fs.existsSync(cronJsPath)) {
-
             // Try cron.json
-            cronJsPath = jobsPath + '/cron.js';
+            cronJsPath = jobsPath + "/cron.js";
 
             if (!fs.existsSync(cronJsPath)) {
-                return logErrorAndExit(`(cron.js/cron.json) not found in jobs directory: (${jobsPath})`)
+                return logErrorAndExit(
+                    `(cron.js/cron.json) not found in jobs directory: (${jobsPath})`
+                );
             }
         }
 
         let cronJobs = require(cronJsPath);
         // Require Node Cron
-        const {CronJob} = require('cron');
+        const { CronJob } = require("cron");
 
         // let cronJobKeys = Object.keys(cronJobs);
-        const cronCmd = basePath('cron-cmd.js');
+        const cronCmd = basePath("cron-cmd.js");
 
         if (!fs.existsSync(cronCmd)) {
-            fs.writeFileSync(cronCmd, fs.readFileSync(cliPath('factory/cron-cmd.txt')));
+            fs.writeFileSync(cronCmd, fs.readFileSync(cliPath("factory/cron-cmd.txt")));
         }
 
-
         if (from === undefined && isProduction) {
-            const start_cron = XjsCliConfig.get('prod.start_cron');
-            let startCronCmd = exec(`${start_cron} cron-cmd.js`, {silent: true});
+            const start_cron = XjsCliConfig.get("prod.start_cron");
+            let startCronCmd = exec(`${start_cron} cron-cmd.js`, {
+                silent: true,
+            });
             if (startCronCmd.stdout.trim().length) {
-                return log('Cron Started.');
+                return log("Cron Started.");
             }
 
             return log(startCronCmd.stderr);
         }
 
-        const spawnCron = XjsCliConfig.get('async_cron_jobs', false);
+        const spawnCron = XjsCliConfig.get("async_cron_jobs", false);
 
-        if (spawnCron)
-            log('Running Asynchronously...')
-
+        if (spawnCron) log("Running Asynchronously...");
 
         for (const cronJob of cronJobs) {
-            if (!cronJob.hasOwnProperty('job')) {
+            if (!cronJob.hasOwnProperty("job")) {
                 return logErrorAndExit(`One or many of your Jobs has no {job} property.`);
             }
 
-            const item = cronJob['job'];
+            const item = cronJob["job"];
 
-
-            if (!cronJob.hasOwnProperty('schedule')) {
+            if (!cronJob.hasOwnProperty("schedule")) {
                 return logErrorAndExit(`Job {${item}} has no schedule property.`);
             }
 
-            const args = cronJob['args'] || [];
+            const args = cronJob["args"] || [];
 
             if (!Array.isArray(args)) {
                 return logErrorAndExit(`Job {${item}} args must be of type Array`);
             }
 
-            let duration = cronJob['schedule'];
-            if (duration === 'everyMinute') {
+            let duration = cronJob["schedule"];
+            if (duration === "everyMinute") {
                 duration = "* * * * *";
-            } else if (duration === 'everySecond') {
-                duration = "* * * * * *"
+            } else if (duration === "everySecond") {
+                duration = "* * * * * *";
             }
 
-            const timezone = cronJob['timezone'] = cronJob['timezone'] || process.env.TZ || 'America/Los_Angeles';
+            const timezone = (cronJob["timezone"] =
+                cronJob["timezone"] || process.env.TZ || "America/Los_Angeles");
             /**
              * Register Cron Jobs
              */
-            new CronJob(duration, () => {
-                /**
-                 * Try Job.handler else catch and log error.
-                 */
-                try {
-                    if (spawnCron) {
-                        return commands.spawnJob([item, ...args]);
-                    } else {
-                        return commands.runJob([item, ...args]);
+            new CronJob(
+                duration,
+                () => {
+                    /**
+                     * Try Job.handler else catch and log error.
+                     */
+                    try {
+                        if (spawnCron) {
+                            return commands.spawnJob([item, ...args]);
+                        } else {
+                            return commands.runJob([item, ...args]);
+                        }
+                    } catch (e) {
+                        logError(`Job Error: {${item}}`);
+                        log(e.stack);
                     }
-
-                } catch (e) {
-                    logError(`Job Error: {${item}}`);
-                    log(e.stack);
-                }
-
-            }, true, timezone);
+                },
+                true,
+                timezone
+            );
 
             log(`Job: ${yellowWithBars(item)} added to cron`);
         }
 
-        log(`Running ${yellowWithBars((cronJobs.length).toString())} registered cron jobs`);
+        log(`Running ${yellowWithBars(cronJobs.length.toString())} registered cron jobs`);
     },
 
     /**
      * Check for Xpresser Update in project
      */
     checkForUpdate() {
-        log('Checking npm registry for version update...');
-        let version = exec(`npm show ${xpresser} version`, {silent: true}).stdout.trim();
+        log("Checking npm registry for version update...");
+        let version = exec(`npm show ${xpresser} version`, {
+            silent: true,
+        }).stdout.trim();
         let currentVersion = currentXjsVersion();
         if (currentVersion < version) {
-            log(`xpresser latest version is ${yellow(version)} but yours is ${whiteBright(currentVersion)}`);
+            log(
+                `xpresser latest version is ${yellow(version)} but yours is ${whiteBright(
+                    currentVersion
+                )}`
+            );
             return prompt({
-                'type': 'confirm',
-                name: 'update',
-                message: `Would you like to update?`
-            }).then(({update}) => {
+                type: "confirm",
+                name: "update",
+                message: `Would you like to update?`,
+            }).then(({ update }) => {
                 if (update) {
                     updateXpresser();
                 } else {
@@ -655,8 +662,8 @@ const commands = {
             });
         }
 
-        log(`You already have the latest version of ${yellow('xpresser')}`);
-        log(`Version: ${whiteBright(currentVersion)}`)
+        log(`You already have the latest version of ${yellow("xpresser")}`);
+        log(`Version: ${whiteBright(currentVersion)}`);
     },
 
     /**
@@ -664,19 +671,19 @@ const commands = {
      * @param process
      */
     stop(process) {
-        if (process === 'all' || process === 'cron') {
-            const stop_cron = XjsCliConfig.get('prod.stop_cron');
-            let stopCron = exec(`${stop_cron} cron-cmd.js`, {silent: true});
+        if (process === "all" || process === "cron") {
+            const stop_cron = XjsCliConfig.get("prod.stop_cron");
+            let stopCron = exec(`${stop_cron} cron-cmd.js`, { silent: true });
             if (stopCron.stdout.trim().length) {
-                log('Cron Stopped.');
+                log("Cron Stopped.");
             }
         }
 
-        if (process === 'all' || process === 'server') {
-            const stop_server = XjsCliConfig.get('prod.stop_server');
-            let stopServer = exec(`${stop_server} server.js`, {silent: true});
+        if (process === "all" || process === "server") {
+            const stop_server = XjsCliConfig.get("prod.stop_server");
+            let stopServer = exec(`${stop_server} server.js`, { silent: true });
             if (stopServer.stdout.trim().length) {
-                log('Server Stopped.');
+                log("Server Stopped.");
             }
         }
     },
@@ -686,14 +693,14 @@ const commands = {
      * @param process
      */
     restart(process) {
-        if (process === 'all' || process === 'cron') {
-            this.stop('cron');
-            this.cron('prod')
+        if (process === "all" || process === "cron") {
+            this.stop("cron");
+            this.cron("prod");
         }
 
-        if (process === 'all' || process === 'server') {
-            this.stop('server');
-            this.start('prod');
+        if (process === "all" || process === "server") {
+            this.stop("server");
+            this.start("prod");
         }
     },
 
@@ -723,42 +730,38 @@ const commands = {
     nginxConf() {
         return prompt([
             {
-                type: 'input',
-                name: 'filename',
-                message: 'Name of config file:',
+                type: "input",
+                name: "filename",
+                message: "Name of config file:",
                 validate(input) {
-                    if (typeof input !== "string" || (input.length < 3)) {
-                        return "Provide a file name."
+                    if (typeof input !== "string" || input.length < 3) {
+                        return "Provide a file name.";
                     }
 
                     return true;
-                }
+                },
             },
 
             {
-                type: 'list',
-                name: 'pathToFile',
-                message: 'Path to file:',
-                choices: [
-                    `Current working directory: ${cyan(basePath())}`,
-                    `Specify?`,
-                ],
+                type: "list",
+                name: "pathToFile",
+                message: "Path to file:",
+                choices: [`Current working directory: ${cyan(basePath())}`, `Specify?`],
                 filter(choice) {
-
-                    if (choice.includes('working')) {
-                        choice = basePath()
+                    if (choice.includes("working")) {
+                        choice = basePath();
                     }
 
                     return choice;
-                }
+                },
             },
 
             {
-                type: 'input',
-                name: 'pathToFile',
-                message: 'Specify path to file:',
-                when({pathToFile}) {
-                    return pathToFile === 'Specify?';
+                type: "input",
+                name: "pathToFile",
+                message: "Specify path to file:",
+                when({ pathToFile }) {
+                    return pathToFile === "Specify?";
                 },
                 validate(input) {
                     const folderExists = fs.existsSync(input);
@@ -769,47 +772,50 @@ const commands = {
                     } else {
                         return true;
                     }
-                }
+                },
             },
 
             {
-                type: 'input',
-                name: 'domain',
+                type: "input",
+                name: "domain",
                 message: `Your app domain:`,
                 validate(input) {
                     if (typeof input !== "string" || !input.length) {
-                        return "Provide domain."
+                        return "Provide domain.";
                     }
 
                     return true;
-                }
+                },
             },
 
             {
-                type: 'input',
-                name: 'app_url',
-                message: `Your app url (including port): e.g (${cyan('localhost:3000')})`,
+                type: "input",
+                name: "app_url",
+                message: `Your app url (including port): e.g (${cyan("localhost:3000")})`,
                 validate(input) {
                     if (typeof input !== "string" || !input.length) {
-                        return "Provide app url."
+                        return "Provide app url.";
                     }
 
                     return true;
-                }
-            }
+                },
+            },
         ]).then((answers) => {
-            const {filename, pathToFile, domain, app_url} = answers;
+            const { filename, pathToFile, domain, app_url } = answers;
             const fullPath = path.resolve(pathToFile, filename);
 
-            const pathToDefaultData = cliPath('factory/nginx/conf.txt');
+            const pathToDefaultData = cliPath("factory/nginx/conf.txt");
             let nginxConfDefaultData = fs.readFileSync(pathToDefaultData).toString();
 
-            nginxConfDefaultData = nginxConfDefaultData.replace(new RegExp('{{domain}}', 'g'), domain);
-            nginxConfDefaultData = nginxConfDefaultData.replace('{{app_url}}', app_url);
+            nginxConfDefaultData = nginxConfDefaultData.replace(
+                new RegExp("{{domain}}", "g"),
+                domain
+            );
+            nginxConfDefaultData = nginxConfDefaultData.replace("{{app_url}}", app_url);
 
             try {
                 fs.writeFileSync(fullPath, nginxConfDefaultData);
-                log(`Conf: ${filename} has been created at ${cyan(fullPath)}`)
+                log(`Conf: ${filename} has been created at ${cyan(fullPath)}`);
             } catch (e) {
                 logErrorAndExit(e.message);
             }
@@ -824,89 +830,92 @@ const commands = {
      */
     async repl(replFile, isProd) {
         // Modify use-xjs-cli.json
-        const xjsConfigPath = basePath('use-xjs-cli.json');
-        const xjsConfig = new ObjectCollection(jsonFromFile(xjsConfigPath) || {})
+        const xjsConfigPath = basePath("use-xjs-cli.json");
+        const xjsConfig = new ObjectCollection(jsonFromFile(xjsConfigPath) || {});
 
-        if (!replFile) replFile = xjsConfig.path(isProd ? 'prod' : 'dev').get('repl');
-        if (!replFile) replFile = 'repl.js';
-
+        if (!replFile) replFile = xjsConfig.path(isProd ? "prod" : "dev").get("repl");
+        if (!replFile) replFile = "repl.js";
 
         const xpresserReplPath = basePath(replFile);
         if (fs.existsSync(xpresserReplPath)) {
             // include repl
             require(xpresserReplPath);
-
         } else {
-            logError(`ReplFile (${replFile}) not found!`)
+            logError(`ReplFile (${replFile}) not found!`);
 
             if (isProd) return;
 
-            const answer = await Questionnaire.yesOrNo(`Would you prefer us to automatically create this repl file for you?`);
+            const answer = await Questionnaire.yesOrNo(
+                `Would you prefer us to automatically create this repl file for you?`
+            );
 
             if (!answer) {
-                return log(`You can view Repl Manual Setup Documentation here ${docs.repl}`)
+                return log(
+                    `You can view Repl Manual Setup Documentation here ${docs.repl}`
+                );
             }
 
-            const hasConfigFile = await Questionnaire.yesOrNo(`Is your project config directly exported in a file?`);
+            const hasConfigFile = await Questionnaire.yesOrNo(
+                `Is your project config directly exported in a file?`
+            );
             let configPath;
 
             if (hasConfigFile) {
-                configPath = await Questionnaire.ask('Relative path to your project config file?', (input) => {
-                    if (!input) {
-                        return "Path to your config file is required!"
-                    }
+                configPath = await Questionnaire.ask(
+                    "Relative path to your project config file?",
+                    (input) => {
+                        if (!input) {
+                            return "Path to your config file is required!";
+                        }
 
-                    const fullPath = path.resolve(input);
-                    const fileExists = fs.existsSync(fullPath);
+                        const fullPath = path.resolve(input);
+                        const fileExists = fs.existsSync(fullPath);
 
-                    if (fileExists && fs.statSync(fullPath).isFile()) {
-                        return true;
-                    } else {
-                        return `File not found at (${fullPath})`;
+                        if (fileExists && fs.statSync(fullPath).isFile()) {
+                            return true;
+                        } else {
+                            return `File not found at (${fullPath})`;
+                        }
                     }
-                });
+                );
             }
 
             try {
-
                 if (hasConfigFile) {
-                    let replWithConfig = fs.readFileSync(cliPath('factory/repl_with_config.js')).toString();
-                    replWithConfig = replWithConfig.replace('{{configFile}}', configPath);
+                    let replWithConfig = fs
+                        .readFileSync(cliPath("factory/repl_with_config.js"))
+                        .toString();
+                    replWithConfig = replWithConfig.replace("{{configFile}}", configPath);
 
-                    fs.writeFileSync(
-                        basePath('repl.js'),
-                        replWithConfig
-                    )
+                    fs.writeFileSync(basePath("repl.js"), replWithConfig);
 
-                    require(basePath('repl.js'));
+                    require(basePath("repl.js"));
                 } else {
-                    fs.copyFileSync(
-                        cliPath('factory/repl.js'),
-                        basePath('repl.js'),
-                    )
+                    fs.copyFileSync(cliPath("factory/repl.js"), basePath("repl.js"));
                 }
 
+                xjsConfig.path("dev").set("repl", "repl.js");
+                xjsConfig.path("prod").set("repl", "repl.js");
 
-                xjsConfig.path('dev').set('repl', 'repl.js')
-                xjsConfig.path('prod').set('repl', 'repl.js')
-
-                fs.writeFileSync(
-                    xjsConfigPath,
-                    xjsConfig.toJson(null, 2)
-                )
-
+                fs.writeFileSync(xjsConfigPath, xjsConfig.toJson(null, 2));
             } catch (e) {
                 logError(`An error occurred while copying factory repl file.`);
-                return logErrorAndExit(`You can view Repl Manual Setup Documentation here ${docs.repl}`)
+                return logErrorAndExit(
+                    `You can view Repl Manual Setup Documentation here ${docs.repl}`
+                );
             }
 
             if (!hasConfigFile) {
-                log(`(${replFile}) created successfully.`)
-                log(`${yellowWithBars('Setup your repl file')} and Re-run ${yellowWithBars('xjs repl')}`)
-                log(`Documentation: ${docs.repl}`)
+                log(`(${replFile}) created successfully.`);
+                log(
+                    `${yellowWithBars(
+                        "Setup your repl file"
+                    )} and Re-run ${yellowWithBars("xjs repl")}`
+                );
+                log(`Documentation: ${docs.repl}`);
             }
         }
-    }
+    },
 };
 
 module.exports = commands;

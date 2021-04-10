@@ -2,18 +2,12 @@
  * Xpresser Npm ID
  * @type {string}
  */
-const xpresser = 'xpresser';
+const xpresser = "xpresser";
 // Import Console Colors
-const {
-    cyan,
-    yellow,
-    red,
-    magenta,
-    white,
-} = require('chalk');
-const fs = require('fs');
-const path = require('path');
-const {exec} = require('shelljs');
+const { cyan, yellow, red, magenta, white } = require("chalk");
+const fs = require("fs");
+const path = require("path");
+const { exec } = require("shelljs");
 
 /**
  * Get Base path
@@ -22,11 +16,11 @@ const {exec} = require('shelljs');
  * @param path
  * @return {string|*}
  */
-exports.basePath = (path = '') => {
+exports.basePath = (path = "") => {
     if (path.length) {
-        return process.cwd() + '/' + path;
+        return process.cwd() + "/" + path;
     }
-    return process.cwd()
+    return process.cwd();
 };
 
 /**
@@ -35,14 +29,14 @@ exports.basePath = (path = '') => {
  * @return {string}
  */
 exports.makeName = (length = 10) => {
-    let result = '';
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = "";
+    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     const charactersLength = characters.length;
     for (let i = 0; i < length; i++) {
         result += characters.charAt(Math.floor(Math.random() * charactersLength));
     }
     return result;
-}
+};
 
 /**
  * Xjs Cli Path
@@ -51,10 +45,9 @@ exports.makeName = (length = 10) => {
  * @param $path
  * @return {string}
  */
-exports.cliPath = ($path = '') => {
-    return path.resolve(__dirname + '/../' + $path)
+exports.cliPath = ($path = "") => {
+    return path.resolve(__dirname + "/../" + $path);
 };
-
 
 /**
  * Simple Log Function
@@ -62,8 +55,8 @@ exports.cliPath = ($path = '') => {
  * @param args
  */
 exports.log = (...args) => {
-    args.unshift('=> ');
-    console.log(cyan(...args))
+    args.unshift("=> ");
+    console.log(cyan(...args));
 };
 
 /**
@@ -72,10 +65,9 @@ exports.log = (...args) => {
  * @param args
  */
 exports.logInfo = (...args) => {
-    args.unshift('=> ');
-    console.log(magenta(...args))
+    args.unshift("=> ");
+    console.log(magenta(...args));
 };
-
 
 /**
  * Error Log Function
@@ -83,9 +75,8 @@ exports.logInfo = (...args) => {
  * @param args
  */
 exports.logError = (...args) => {
-    console.error(red(...args))
+    console.error(red(...args));
 };
-
 
 /**
  * LogError And Exit
@@ -94,9 +85,8 @@ exports.logError = (...args) => {
  * @param args
  */
 exports.logErrorAndExit = (...args) => {
-
     if (args.length) {
-        args.unshift('Error: ');
+        args.unshift("Error: ");
         exports.logError(...args);
     }
 
@@ -104,18 +94,17 @@ exports.logErrorAndExit = (...args) => {
 };
 
 // Define Colors with bars helper function
-exports.yellowWithBars = (str) => yellow('{' + str.trim() + '}');
-
+exports.yellowWithBars = (str) => yellow("{" + str.trim() + "}");
 
 /**
  * Get current XjsVersion from package.json
  * @return {string}
  */
 exports.currentXjsVersion = () => {
-    let packageDotJson = require(exports.basePath('package.json'));
-    let packages = packageDotJson['dependencies'];
+    let packageDotJson = require(exports.basePath("package.json"));
+    let packages = packageDotJson["dependencies"];
     let packagesKeys = Object.keys(packages);
-    let version = '0.0.0';
+    let version = "0.0.0";
 
     for (let i = 0; i < packagesKeys.length; i++) {
         const packagesKey = packagesKeys[i];
@@ -125,7 +114,7 @@ exports.currentXjsVersion = () => {
         }
     }
 
-    if (version.substr(0, 1) === '^') {
+    if (version.substr(0, 1) === "^") {
         version = version.substr(1);
     }
 
@@ -137,8 +126,7 @@ exports.currentXjsVersion = () => {
  * @return {boolean}
  * @constructor
  */
-exports.HasYarnLock = () => fs.existsSync(exports.basePath('yarn.lock'));
-
+exports.HasYarnLock = () => fs.existsSync(exports.basePath("yarn.lock"));
 
 /**
  * Update project using yarn or npm
@@ -148,28 +136,23 @@ exports.updateXpresser = () => {
     let command = `npm install ${xpresser} --save --no-audit --silent`;
 
     if (exports.HasYarnLock()) {
-
-        exports.log('Using Yarn...');
-        command = `yarn add ${xpresser} --silent`
-
+        exports.log("Using Yarn...");
+        command = `yarn add ${xpresser} --silent`;
     } else {
-
-        exports.log('Using Npm...');
+        exports.log("Using Npm...");
         // if NPM remove xpresser first
-        exec(`npm remove ${xpresser}`, {silent: true})
-
+        exec(`npm remove ${xpresser}`, { silent: true });
     }
 
-    console.log(white('............'));
-    exports.log('Updating....');
-    console.log(white('............'));
+    console.log(white("............"));
+    exports.log("Updating....");
+    console.log(white("............"));
 
     exec(command);
 
-    console.log(white('............'));
+    console.log(white("............"));
     exports.log(`${xpresser} updated successfully.`);
 };
-
 
 /**
  * Get All files in a given path.
@@ -177,17 +160,15 @@ exports.updateXpresser = () => {
  * @returns {Array}
  */
 exports.getAllFiles = (path) => {
-
     let list = [];
 
     if (fs.existsSync(path)) {
         const files = fs.readdirSync(path);
 
         for (const file of files) {
-            const fullPath = path + '/' + file;
+            const fullPath = path + "/" + file;
 
             if (fs.lstatSync(fullPath).isDirectory()) {
-
                 const folderFiles = exports.getAllFiles(fullPath);
                 for (const folderFile of folderFiles) {
                     list.push(folderFile);
@@ -201,21 +182,19 @@ exports.getAllFiles = (path) => {
     return list;
 };
 
-
 /**
  * Loads project jobs.
  * @param {string} path
  * @deprecated
  * @return {{}}
  * */
-exports.loadJobs = function (path = '') {
-
+exports.loadJobs = function (path = "") {
     /**
      * Defaults to 'backend/jobs'
      * Cli assumes we are making use of the xpresser framework structure.
      */
-    if (!path || path === '') {
-        path = exports.basePath('backend/jobs');
+    if (!path || path === "") {
+        path = exports.basePath("backend/jobs");
     }
 
     const $commands = {};
@@ -223,14 +202,16 @@ exports.loadJobs = function (path = '') {
     const files = exports.getAllFiles(path);
 
     for (const file of files) {
-        const jobFile = file.replace(path, '');
+        const jobFile = file.replace(path, "");
         const job = require(file);
 
-        if (typeof job !== 'object') {
-            exports.logErrorAndExit('Job: {' + jobFile + '} did not return object!');
+        if (typeof job !== "object") {
+            exports.logErrorAndExit("Job: {" + jobFile + "} did not return object!");
 
-            if (job.hasOwnProperty('command') || !job.hasOwnProperty('handler')) {
-                exports.logErrorAndExit('Job: {' + jobFile + '} is not structured properly!')
+            if (job.hasOwnProperty("command") || !job.hasOwnProperty("handler")) {
+                exports.logErrorAndExit(
+                    "Job: {" + jobFile + "} is not structured properly!"
+                );
             }
         }
 
@@ -250,4 +231,4 @@ exports.loadJobs = function (path = '') {
 exports.jsonFromFile = (file) => {
     const json = fs.readFileSync(file).toString();
     return JSON.parse(json);
-}
+};
