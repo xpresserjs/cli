@@ -18,7 +18,7 @@
   "async_cron_jobs": false,
   "stacks": {
     "tsc" : [
-      "tsc -p tsconfig.json"
+      "npx tsc -p tsconfig.json"
     ]
   }
 }

@@ -2,7 +2,7 @@ const { program } = require("commander");
 const { red } = require("chalk");
 const Commands = require("./src/Commands");
 let packages = require("./package.json");
-let _ = require("object-collection")._;
+let _ = require("object-collection").getLodash();
 
 let config = Commands.checkIfInXjsFolder(true, true);
 const isProd = (command) => {
@@ -227,7 +227,7 @@ if (!config) {
                     .command(extension["command"])
                     .description(extension["description"])
                     .action((...args) => {
-                        let commands = args;
+                        let commands;
 
                         if (args.length > 1) {
                             commands = args.splice(0, args.length - 1);
@@ -240,6 +240,7 @@ if (!config) {
                         if (!action) action = extension["command"].split(" ")[0];
 
                         let command = (action + " " + commands.join(" ")).trim();
+
                         return Commands.cli(command, true, true, false);
                     });
             }
