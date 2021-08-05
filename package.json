@@ -7,6 +7,9 @@
     "xjs": "./cli.js",
     "xjs-await": "./cli-await.js"
   },
+  "engines": {
+    "node": ">=12"
+  },
   "keywords": [
     "xpresser",
     "xpresser-cli",
@@ -17,11 +20,11 @@
   "author": "Xpresser",
   "license": "ISC",
   "dependencies": {
-    "chalk": "^4.1.0",
-    "commander": "^6.2.0",
+    "chalk": "^4.1.2",
+    "commander": "^8.1.0",
     "cron": "^1.8.2",
-    "inquirer": "^7.3.3",
-    "object-collection": "^1.0.30",
+    "inquirer": "^8.1.2",
+    "object-collection": "^2.0.0",
     "shelljs": "^0.8.4"
   },
   "devDependencies": {},

@@ -169,7 +169,10 @@ const commands = {
             // Clear .git folder after clone
             const dotGitFolder = `${projectPath}/.git`;
             if (fs.existsSync(dotGitFolder)) {
-                exec(`rm -rf ${dotGitFolder}`);
+                try {
+                    fs.unlinkSync(dotGitFolder);
+                    exec(`rm -rf ${dotGitFolder}`);
+                } catch {}
             }
 
             console.log(white(".........."));
