@@ -229,8 +229,11 @@ if (!config) {
                     .action((...args) => {
                         let commands;
 
-                        if (args.length > 1) {
-                            commands = args.splice(0, args.length - 1);
+                        if (args.length >= 3) {
+                            args.pop(); // remove commander args
+                            args.pop(); // remove commander args
+
+                            commands = args;
                         } else {
                             commands = [];
                         }
