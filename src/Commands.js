@@ -351,7 +351,7 @@ const commands = {
      */
     makeController(name, options) {
         let $type = undefined;
-        const $types = _.pick(options, ["class", "object", "services"]);
+        const $types = options;
 
         if ($types["object"]) {
             $type = "object";

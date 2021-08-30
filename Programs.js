@@ -5,8 +5,14 @@ let packages = require("./package.json");
 let _ = require("object-collection").getLodash();
 
 let config = Commands.checkIfInXjsFolder(true, true);
-const isProd = (command) => {
-    return !!(typeof command === "object" && command.parent && command.parent.prod);
+
+const getOption = (opt) => {
+    const opts = program.opts();
+    return opts[opt];
+};
+
+const isProd = () => {
+    return getOption("prod");
 };
 
 /**
@@ -66,7 +72,7 @@ if (!config) {
     program
         .command("repl [repFile]")
         .description("Start Repl")
-        .action((repFile, command) => Commands.repl(repFile, isProd(command)));
+        .action((repFile) => Commands.repl(repFile, isProd()));
 
     program
         .command("up")
@@ -81,7 +87,7 @@ if (!config) {
     program
         .command("start")
         .description("Start server.")
-        .action((command) => Commands.start(isProd(command) ? "prod" : "dev"));
+        .action(() => Commands.start(isProd() ? "prod" : "dev"));
 
     program
         .command("install [plugin]")
@@ -139,10 +145,7 @@ if (!config) {
         // .alias('mk:ctrl')
         .description("Generate new Controller file.")
         .action((name, args) => {
-            return Commands.makeController(
-                name,
-                _.pick(args, ["class", "object", "services"])
-            );
+            return Commands.makeController(name, args);
         })
         .option("-c, --class", "Controller Class")
         .option("-o, --object", "Controller Object")
@@ -163,10 +166,10 @@ if (!config) {
     program
         .command("cron [from_cmd]")
         .description("Start cron registered commands.")
-        .action((from_cmd, command) =>
-            Commands.cron(isProd(command), from_cmd, command.object)
-        )
-        .option("-o, --object", "Show job object");
+        .option("-o, --object", "Show job object")
+        .action((from_cmd, options) => {
+            Commands.cron(isProd(), from_cmd, options.object);
+        });
 
     program
         .command("stop <process>")
