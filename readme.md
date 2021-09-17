@@ -10,9 +10,9 @@ Note: Requires **global** Installation.
 
 ##### NPM
 ```sh
-npm i xjs-cli -g
+npm i xjs-cli@next -g
 ```
 ##### YARN
 ```sh
-yarn global add xjs-cli
+yarn global add xjs-cli@next
 ```
