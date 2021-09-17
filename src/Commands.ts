@@ -490,8 +490,8 @@ const commands = {
         }
 
         let stacks = useFile.stacks;
-        let stackKey = yellowWithBars(stack),
-            stackPath = yellowWithBars(`stacks.${stack}`);
+        let stackKey = yellowWithBars(stack);
+        let stackPath = yellowWithBars(`stacks.${stack}`);
 
         if (!stacks || !stacks.hasOwnProperty(stack)) {
             return logErrorAndExit(`Stack ${stackPath} not found in use-xjs-cli.json`);
