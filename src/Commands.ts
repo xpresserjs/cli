@@ -1,8 +1,5 @@
-// Import Console Colors
-const { cyan, yellow, whiteBright, white, green } = require("chalk");
-
-// Functions
-const {
+import { cyan, yellow, whiteBright, white, green } from "chalk";
+import {
     basePath,
     log,
     logErrorAndExit,
@@ -11,29 +8,19 @@ const {
     yellowWithBars,
     currentXjsVersion,
     updateXpresser,
-} = require("./Functions");
+    xc_globalConfig
+} from "./Functions";
 
-// Import Other Libraries
-const { prompt } = require("inquirer");
-const fs = require("fs");
-const path = require("path");
-const { spawn } = require("child_process");
-const { exec } = require("shelljs");
-const Questionnaire = require("./Questionaire");
+import { prompt } from "inquirer";
+import fs = require("fs");
+import path = require("path");
+import { spawn } from "child_process";
+import { exec } from "shelljs";
+import Questionnaire = require("./Questionaire");
+import ObjectCollection = require("object-collection");
+import { xc_docsReference, xpresserNpmId } from "./Constants";
 
-const ObjectCollection = require("object-collection");
 const _ = ObjectCollection.getLodash();
-
-/**
- * Xpresser Npm ID
- * @type {string}
- */
-const xpresser = "xpresser";
-
-// Documentation links
-const docs = {
-    repl: "https://xpresserjs.com/cli/repl.html",
-};
 
 /**
  * Set DefaultConfig to provide values for undefined keys.
@@ -61,7 +48,7 @@ const commands = {
             return logErrorAndExit(`File: {${file}} not found!`);
         }
 
-        let jsonPath = cliPath("factory/use-xjs-cli.js.json");
+        let jsonPath = cliPath("factory/use-xjs-cli.ts.json");
         let fileToJs = file;
 
         if (file.substr(-3) === ".ts") {
@@ -85,8 +72,9 @@ const commands = {
      * @param name
      * @returns *
      */
-    create(name) {
+    create(name: string) {
         const projectPath = path.resolve(`./${name}`);
+
         if (fs.existsSync(projectPath)) {
             logError(`Folder ${yellow(name)} already exists`);
             return logError(`@ ${projectPath}`);
@@ -106,7 +94,7 @@ const commands = {
                     }
                     name = input;
                     return true;
-                },
+                }
             },
 
             {
@@ -116,7 +104,7 @@ const commands = {
                 choices: () => ["Javascript", "Typescript"],
                 filter(choice) {
                     return choice.toLowerCase() === "javascript" ? "js" : "ts";
-                },
+                }
             },
 
             {
@@ -126,7 +114,7 @@ const commands = {
                 choices: [
                     `Simple App (Hello World, No views)`,
                     `Using Ejs Template Engine`,
-                    `Using Edge Template Engine (similar to Blade template)`,
+                    `Using Edge Template Engine (similar to Blade template)`
                 ],
                 filter(choice) {
                     if (choice.includes("Simple")) {
@@ -138,25 +126,25 @@ const commands = {
                     }
 
                     return choice;
-                },
-            },
+                }
+            }
         ]).then(({ type, lang }) => {
             const index = lang === "js" ? 0 : 1;
 
             let gitUrl = [
                 "https://github.com/xpresserjs/new-app-lite.git",
-                "https://github.com/xpresserjs/new-app-lite-ts.git",
+                "https://github.com/xpresserjs/new-app-lite-ts.git"
             ][index];
 
             if (type === "ejs") {
                 gitUrl = [
                     "https://github.com/xpresserjs/new-app.git",
-                    "https://github.com/xpresserjs/new-app-ts.git",
+                    "https://github.com/xpresserjs/new-app-ts.git"
                 ][index];
             } else if (type === "edge") {
                 gitUrl = [
                     "https://github.com/xpresserjs/new-app-edge-js.git",
-                    "https://github.com/xpresserjs/new-app-edge-ts.git",
+                    "https://github.com/xpresserjs/new-app-edge-ts.git"
                 ][index];
             }
 
@@ -195,11 +183,13 @@ const commands = {
      * @returns {void|boolean|ObjectCollection}
      */
     checkIfInXjsFolder(trueOrFalse = false, $returnData = false) {
-        if (typeof XjsCliConfig !== "undefined") {
+        let globalConfig = xc_globalConfig();
+
+        if (typeof globalConfig !== "undefined") {
             if (trueOrFalse) {
                 return true;
             } else if ($returnData) {
-                return XjsCliConfig;
+                return globalConfig;
             }
         }
 
@@ -211,11 +201,14 @@ const commands = {
                     let config = require(appHasXjs);
                     if (typeof config === "object") {
                         config = _.merge(defaultConfig, config);
-                        global["XjsCliConfig"] = new ObjectCollection(config);
+                        // @ts-ignore
+                        globalConfig = global["XjsCliConfig"] = new ObjectCollection(
+                            config
+                        );
 
                         if (
-                            !XjsCliConfig.has("dev.main") ||
-                            !XjsCliConfig.has("prod.main")
+                            !globalConfig.has("dev.main") ||
+                            !globalConfig.has("prod.main")
                         ) {
                             return logErrorAndExit(
                                 " No development/production settings in use-xjs-cli.json"
@@ -225,7 +218,7 @@ const commands = {
                         }
                     }
                 } catch (e) {
-                    return logErrorAndExit(e.message);
+                    return logErrorAndExit((e as Error).message);
                 }
             }
         } else {
@@ -238,12 +231,17 @@ const commands = {
      * Start Server
      * @param env
      */
-    start(env = "dev") {
-        let config = XjsCliConfig;
+    start(env: "prod" | "production" | "dev" = "dev") {
+        let config = xc_globalConfig()!;
+        type expectedConfig = {
+            main: string;
+            start_server: string;
+        };
 
         if (env === "prod" || env === "production") {
-            config = XjsCliConfig.get("prod");
-            const command = `${config["start_server"]} ${config.main}`;
+            const { start_server, main } = config.get("prod") as expectedConfig;
+
+            const command = `${start_server} ${main}`;
             const startServer = exec(command, { silent: true });
 
             if (!startServer.stderr.trim().length) {
@@ -253,9 +251,7 @@ const commands = {
                 logErrorAndExit(startServer.stderr);
             }
         } else {
-            config = XjsCliConfig.get("dev");
-            let main = config["main"];
-            let command = config["start_server"];
+            const { main, start_server: command } = config.get("dev") as expectedConfig;
 
             exec(command.includes(main) ? command : `${command} ${main}`);
         }
@@ -268,8 +264,9 @@ const commands = {
      * @param exit
      * @param fromXjsCli
      */
-    cli(command, isDev = true, exit = true, fromXjsCli = true) {
+    cli(command: string, isDev: boolean = true, fromXjsCli = true) {
         command = this.cliCommand(command, isDev, fromXjsCli);
+        // @ts-ignore
         return exec(command, null, { stdio: "inherit" });
     },
 
@@ -277,13 +274,11 @@ const commands = {
      * Run CLi Commands in shell
      * @param command
      * @param isDev
-     * @param exit
      */
-    cliSpawn(command, isDev = true, exit = true) {
+    cliSpawn(command: string, isDev: boolean = true) {
         command = this.cliCommand(command, isDev);
         const $commands = command.trim().split(" ");
         const [, ...$afterFirstCommand] = $commands;
-        // return spawn($commands[0], $afterFirstCommand);
         const $process = spawn($commands[0], $afterFirstCommand);
 
         $process.stdout.on("data", (msg) => {
@@ -298,8 +293,9 @@ const commands = {
      * @param fromXjsCli
      * @returns {string}
      */
-    cliCommand(command, isDev = true, fromXjsCli = true) {
-        const config = XjsCliConfig.get(isDev ? "dev" : "prod");
+    cliCommand(command: string, isDev: boolean = true, fromXjsCli = true) {
+        const config = xc_globalConfig()!.get(isDev ? "dev" : "prod");
+
         return `${config["start_console"]} ${config.main} cli ${command} ${
             fromXjsCli ? "--from-xjs-cli" : ""
         }`.trim();
@@ -311,7 +307,7 @@ const commands = {
      * @param query
      * @returns {*}
      */
-    routes(search, query) {
+    routes(search: string, query: string) {
         if (!search) search = "";
         if (!query) query = "";
 
@@ -339,7 +335,7 @@ const commands = {
      * @param name
      * @returns {*|void}
      */
-    makeView(name) {
+    makeView(name: string) {
         return this.cli("make:view " + name);
     },
 
@@ -349,8 +345,8 @@ const commands = {
      * @param options
      * @returns {*|void}
      */
-    makeController(name, options) {
-        let $type = undefined;
+    makeController(name: string, options: Record<string, any>) {
+        let $type: string;
         const $types = options;
 
         if ($types["object"]) {
@@ -375,7 +371,7 @@ const commands = {
                     }
                     name = input;
                     return true;
-                },
+                }
             },
             {
                 type: "list",
@@ -384,7 +380,7 @@ const commands = {
                 choices: [
                     `Controller Class`,
                     `Controller Object`,
-                    `Controller with Custom Services`,
+                    `Controller with Custom Services`
                 ],
                 when() {
                     return $type === undefined;
@@ -398,8 +394,8 @@ const commands = {
                         choice = "services";
                     }
                     return choice;
-                },
-            },
+                }
+            }
         ]).then(({ type }) => {
             if (type) $type = type;
             let command = "make:controller";
@@ -414,7 +410,7 @@ const commands = {
         });
     },
 
-    makeControllerService(name) {
+    makeControllerService(name: string) {
         return this.cli(`make:controllerService ${name}`);
     },
 
@@ -423,7 +419,7 @@ const commands = {
      * @param args
      * @returns {*|void}
      */
-    makeModel(...args) {
+    makeModel(...args: string[]) {
         return this.cli("make:model " + args.join(" "));
     },
 
@@ -432,7 +428,7 @@ const commands = {
      * @param name
      * @returns {*|void}
      */
-    makeMiddleware(name) {
+    makeMiddleware(name: string) {
         return this.cli("make:middleware " + name);
     },
 
@@ -442,7 +438,7 @@ const commands = {
      * @param name
      * @param command
      */
-    makeJob(name, command) {
+    makeJob(name: string, command: string) {
         return this.cli(`make:job ${name} ${command}`);
     },
 
@@ -452,7 +448,7 @@ const commands = {
      * @param namespace
      * @returns {*|void}
      */
-    makeEvent(name, namespace) {
+    makeEvent(name: string, namespace: string) {
         if (namespace === undefined) {
             namespace = name;
         }
@@ -467,7 +463,7 @@ const commands = {
      * @param args
      * @returns {*|void}
      */
-    runJob(args) {
+    runJob(args: string[]) {
         return this.cli("@" + args.join(" "));
     },
 
@@ -476,7 +472,7 @@ const commands = {
      * @param stack
      * @param config
      */
-    stack(stack, config) {
+    stack(stack: string, config: any) {
         return this.runStack(stack, config, false);
     },
 
@@ -486,7 +482,7 @@ const commands = {
      * @param useFile
      * @param build
      */
-    runStack(stack, useFile, build = "build") {
+    runStack(stack: string, useFile: any, build: string | boolean = "build") {
         build = build === "build";
 
         if (!useFile.hasOwnProperty("stacks")) {
@@ -528,7 +524,7 @@ const commands = {
      * @param args
      * @returns {*|void}
      */
-    spawnJob(args) {
+    spawnJob(args: string[]) {
         return this.cliSpawn("@" + args.join(" "));
     },
 
@@ -539,7 +535,8 @@ const commands = {
      * @param showObject
      */
     cron(isProduction = false, from = undefined, showObject = false) {
-        const config = XjsCliConfig.path(isProduction ? "prod" : "dev");
+        const gConfig = xc_globalConfig()!;
+        const config = gConfig.path(isProduction ? "prod" : "dev");
         const jobsPath = basePath(config.get("jobs_path", "backend/jobs"));
         let cronJsPath = jobsPath + "/cron.json";
 
@@ -566,9 +563,9 @@ const commands = {
         }
 
         if (from === undefined && isProduction) {
-            const start_cron = XjsCliConfig.get("prod.start_cron");
+            const start_cron = gConfig.get("prod.start_cron");
             let startCronCmd = exec(`${start_cron} cron-cmd.js`, {
-                silent: true,
+                silent: true
             });
             if (startCronCmd.stdout.trim().length) {
                 return log("Cron Started.");
@@ -577,7 +574,7 @@ const commands = {
             return log(startCronCmd.stderr);
         }
 
-        const spawnCron = XjsCliConfig.get("async_cron_jobs", false);
+        const spawnCron = gConfig.get("async_cron_jobs", false);
 
         if (spawnCron) log("Running Asynchronously...");
 
@@ -622,7 +619,7 @@ const commands = {
                         } else {
                             return commands.runJob([item, ...args]);
                         }
-                    } catch (e) {
+                    } catch (e: any) {
                         logError(`Job Error: {${item}}`);
                         log(e.stack);
                     }
@@ -642,8 +639,8 @@ const commands = {
      */
     checkForUpdate() {
         log("Checking npm registry for version update...");
-        let version = exec(`npm show ${xpresser} version`, {
-            silent: true,
+        let version = exec(`npm show ${xpresserNpmId} version`, {
+            silent: true
         }).stdout.trim();
         let currentVersion = currentXjsVersion();
         if (currentVersion < version) {
@@ -655,7 +652,7 @@ const commands = {
             return prompt({
                 type: "confirm",
                 name: "update",
-                message: `Would you like to update?`,
+                message: `Would you like to update?`
             }).then(({ update }) => {
                 if (update) {
                     updateXpresser();
@@ -673,9 +670,12 @@ const commands = {
      * Stop a process
      * @param process
      */
-    stop(process) {
+    stop(process: string) {
+        const gConfig = xc_globalConfig()!;
+
         if (process === "all" || process === "cron") {
-            const stop_cron = XjsCliConfig.get("prod.stop_cron");
+            const stop_cron = xc_globalConfig()!.get("prod.stop_cron");
+
             let stopCron = exec(`${stop_cron} cron-cmd.js`, { silent: true });
             if (stopCron.stdout.trim().length) {
                 log("Cron Stopped.");
@@ -683,7 +683,8 @@ const commands = {
         }
 
         if (process === "all" || process === "server") {
-            const stop_server = XjsCliConfig.get("prod.stop_server");
+            const stop_server = gConfig.get("prod.stop_server");
+
             let stopServer = exec(`${stop_server} server.js`, { silent: true });
             if (stopServer.stdout.trim().length) {
                 log("Server Stopped.");
@@ -695,10 +696,10 @@ const commands = {
      * Restart Process
      * @param process
      */
-    restart(process) {
+    restart(process: string) {
         if (process === "all" || process === "cron") {
             this.stop("cron");
-            this.cron("prod");
+            this.cron(true);
         }
 
         if (process === "all" || process === "server") {
@@ -714,7 +715,7 @@ const commands = {
      * @param overwrite
      * @return {*}
      */
-    import(plugin, folder, overwrite) {
+    import(plugin: string, folder: string, overwrite: boolean) {
         return this.cli(`import ${plugin} ${folder} ${overwrite}`.trim());
     },
 
@@ -723,7 +724,7 @@ const commands = {
      * @param $plugin
      * @return {*|void}
      */
-    installPlugin($plugin) {
+    installPlugin($plugin: string) {
         return this.cli(`install ${$plugin}`);
     },
 
@@ -742,7 +743,7 @@ const commands = {
                     }
 
                     return true;
-                },
+                }
             },
 
             {
@@ -756,7 +757,7 @@ const commands = {
                     }
 
                     return choice;
-                },
+                }
             },
 
             {
@@ -775,7 +776,7 @@ const commands = {
                     } else {
                         return true;
                     }
-                },
+                }
             },
 
             {
@@ -788,7 +789,7 @@ const commands = {
                     }
 
                     return true;
-                },
+                }
             },
 
             {
@@ -801,8 +802,8 @@ const commands = {
                     }
 
                     return true;
-                },
-            },
+                }
+            }
         ]).then((answers) => {
             const { filename, pathToFile, domain, app_url } = answers;
             const fullPath = path.resolve(pathToFile, filename);
@@ -819,7 +820,7 @@ const commands = {
             try {
                 fs.writeFileSync(fullPath, nginxConfDefaultData);
                 log(`Conf: ${filename} has been created at ${cyan(fullPath)}`);
-            } catch (e) {
+            } catch (e: any) {
                 logErrorAndExit(e.message);
             }
         });
@@ -831,7 +832,7 @@ const commands = {
      * @param isProd
      * @return {Promise<void>}
      */
-    async repl(replFile, isProd) {
+    async repl(replFile: string, isProd: boolean) {
         // Modify use-xjs-cli.json
         const xjsConfigPath = basePath("use-xjs-cli.json");
         const xjsConfig = new ObjectCollection(jsonFromFile(xjsConfigPath) || {});
@@ -854,7 +855,7 @@ const commands = {
 
             if (!answer) {
                 return log(
-                    `You can view Repl Manual Setup Documentation here ${docs.repl}`
+                    `You can view Repl Manual Setup Documentation here ${xc_docsReference.repl}`
                 );
             }
 
@@ -888,6 +889,7 @@ const commands = {
                     let replWithConfig = fs
                         .readFileSync(cliPath("factory/repl_with_config.js"))
                         .toString();
+
                     replWithConfig = replWithConfig.replace("{{configFile}}", configPath);
 
                     fs.writeFileSync(basePath("repl.js"), replWithConfig);
@@ -904,7 +906,7 @@ const commands = {
             } catch (e) {
                 logError(`An error occurred while copying factory repl file.`);
                 return logErrorAndExit(
-                    `You can view Repl Manual Setup Documentation here ${docs.repl}`
+                    `You can view Repl Manual Setup Documentation here ${xc_docsReference.repl}`
                 );
             }
 
@@ -915,10 +917,10 @@ const commands = {
                         "Setup your repl file"
                     )} and Re-run ${yellowWithBars("xjs repl")}`
                 );
-                log(`Documentation: ${docs.repl}`);
+                log(`Documentation: ${xc_docsReference.repl}`);
             }
         }
-    },
+    }
 };
 
-module.exports = commands;
+export = commands;

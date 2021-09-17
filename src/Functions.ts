@@ -1,13 +1,13 @@
-/**
- * Xpresser Npm ID
- * @type {string}
- */
-const xpresser = "xpresser";
-// Import Console Colors
-const { cyan, yellow, red, magenta, white } = require("chalk");
-const fs = require("fs");
-const path = require("path");
-const { exec } = require("shelljs");
+import { cyan, yellow, red, magenta, white } from "chalk";
+import fs = require("fs");
+import path = require("path");
+import { exec } from "shelljs";
+import ObjectCollection = require("object-collection");
+import { xpresserNpmId } from "./Constants";
+
+export const xc_globalConfig = (): ObjectCollection | undefined =>
+    // @ts-ignore
+    global["XjsCliConfig"];
 
 /**
  * Get Base path
@@ -16,7 +16,7 @@ const { exec } = require("shelljs");
  * @param path
  * @return {string|*}
  */
-exports.basePath = (path = "") => {
+export const basePath = (path: string = "") => {
     if (path.length) {
         return process.cwd() + "/" + path;
     }
@@ -28,7 +28,7 @@ exports.basePath = (path = "") => {
  * @param length
  * @return {string}
  */
-exports.makeName = (length = 10) => {
+export const makeName = (length: number = 10) => {
     let result = "";
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     const charactersLength = characters.length;
@@ -45,7 +45,7 @@ exports.makeName = (length = 10) => {
  * @param $path
  * @return {string}
  */
-exports.cliPath = ($path = "") => {
+export const cliPath = ($path = "") => {
     return path.resolve(__dirname + "/../" + $path);
 };
 
@@ -54,7 +54,7 @@ exports.cliPath = ($path = "") => {
  * Using Cyan Color
  * @param args
  */
-exports.log = (...args) => {
+export const log = (...args: any[]) => {
     args.unshift("=> ");
     console.log(cyan(...args));
 };
@@ -64,7 +64,7 @@ exports.log = (...args) => {
  * Using Cyan Color
  * @param args
  */
-exports.logInfo = (...args) => {
+export const logInfo = (...args: any[]) => {
     args.unshift("=> ");
     console.log(magenta(...args));
 };
@@ -74,7 +74,7 @@ exports.logInfo = (...args) => {
  * Using Red Color
  * @param args
  */
-exports.logError = (...args) => {
+export const logError = (...args: any[]) => {
     console.error(red(...args));
 };
 
@@ -84,31 +84,32 @@ exports.logError = (...args) => {
  * logs error then exists program.
  * @param args
  */
-exports.logErrorAndExit = (...args) => {
+export const logErrorAndExit = (...args: any[]) => {
     if (args.length) {
         args.unshift("Error: ");
-        exports.logError(...args);
+        logError(...args);
     }
 
     process.exit();
 };
 
 // Define Colors with bars helper function
-exports.yellowWithBars = (str) => yellow("{" + str.trim() + "}");
+export const yellowWithBars = (str: string) => yellow("{" + str.trim() + "}");
 
 /**
  * Get current XjsVersion from package.json
  * @return {string}
  */
-exports.currentXjsVersion = () => {
-    let packageDotJson = require(exports.basePath("package.json"));
+export const currentXjsVersion = () => {
+    let packageDotJson = require(basePath("package.json"));
+
     let packages = packageDotJson["dependencies"];
     let packagesKeys = Object.keys(packages);
     let version = "0.0.0";
 
     for (let i = 0; i < packagesKeys.length; i++) {
         const packagesKey = packagesKeys[i];
-        if (packagesKey === xpresser) {
+        if (packagesKey === xpresserNpmId) {
             version = packages[packagesKey];
             break;
         }
@@ -126,32 +127,32 @@ exports.currentXjsVersion = () => {
  * @return {boolean}
  * @constructor
  */
-exports.HasYarnLock = () => fs.existsSync(exports.basePath("yarn.lock"));
+export const HasYarnLock = () => fs.existsSync(basePath("yarn.lock"));
 
 /**
  * Update project using yarn or npm
  * @return {*}
  */
-exports.updateXpresser = () => {
-    let command = `npm install ${xpresser} --save --no-audit --silent`;
+export const updateXpresser = () => {
+    let command = `npm install ${xpresserNpmId} --save --no-audit --silent`;
 
-    if (exports.HasYarnLock()) {
-        exports.log("Using Yarn...");
-        command = `yarn add ${xpresser} --silent`;
+    if (HasYarnLock()) {
+        log("Using Yarn...");
+        command = `yarn add ${xpresserNpmId} --silent`;
     } else {
-        exports.log("Using Npm...");
+        log("Using Npm...");
         // if NPM remove xpresser first
-        exec(`npm remove ${xpresser}`, { silent: true });
+        exec(`npm remove ${xpresserNpmId}`, { silent: true });
     }
 
     console.log(white("............"));
-    exports.log("Updating....");
+    log("Updating....");
     console.log(white("............"));
 
     exec(command);
 
     console.log(white("............"));
-    exports.log(`${xpresser} updated successfully.`);
+    log(`${xpresserNpmId} updated successfully.`);
 };
 
 /**
@@ -159,8 +160,8 @@ exports.updateXpresser = () => {
  * @param path
  * @returns {Array}
  */
-exports.getAllFiles = (path) => {
-    let list = [];
+export const getAllFiles = (path: string) => {
+    let list: string[] = [];
 
     if (fs.existsSync(path)) {
         const files = fs.readdirSync(path);
@@ -169,7 +170,7 @@ exports.getAllFiles = (path) => {
             const fullPath = path + "/" + file;
 
             if (fs.lstatSync(fullPath).isDirectory()) {
-                const folderFiles = exports.getAllFiles(fullPath);
+                const folderFiles = getAllFiles(fullPath);
                 for (const folderFile of folderFiles) {
                     list.push(folderFile);
                 }
@@ -188,30 +189,28 @@ exports.getAllFiles = (path) => {
  * @deprecated
  * @return {{}}
  * */
-exports.loadJobs = function (path = "") {
+export const loadJobs = function (path = "") {
     /**
      * Defaults to 'backend/jobs'
      * Cli assumes we are making use of the xpresser framework structure.
      */
     if (!path || path === "") {
-        path = exports.basePath("backend/jobs");
+        path = basePath("backend/jobs");
     }
 
-    const $commands = {};
+    const $commands: Record<string, any> = {};
 
-    const files = exports.getAllFiles(path);
+    const files = getAllFiles(path);
 
     for (const file of files) {
         const jobFile = file.replace(path, "");
         const job = require(file);
 
         if (typeof job !== "object") {
-            exports.logErrorAndExit("Job: {" + jobFile + "} did not return object!");
+            logErrorAndExit("Job: {" + jobFile + "} did not return object!");
 
             if (job.hasOwnProperty("command") || !job.hasOwnProperty("handler")) {
-                exports.logErrorAndExit(
-                    "Job: {" + jobFile + "} is not structured properly!"
-                );
+                logErrorAndExit("Job: {" + jobFile + "} is not structured properly!");
             }
         }
 
@@ -228,7 +227,7 @@ exports.loadJobs = function (path = "") {
     return $commands;
 };
 
-exports.jsonFromFile = (file) => {
+export const jsonFromFile = (file: string) => {
     const json = fs.readFileSync(file).toString();
     return JSON.parse(json);
 };

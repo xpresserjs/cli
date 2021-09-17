@@ -2,3 +2,9 @@ node_modules
 .idea
 .vscode
 *.log
+
+*.d.ts
+!global.d.ts
+
+*.js
+!factory/*.js

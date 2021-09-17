@@ -1,8 +1,8 @@
-const { prompt } = require("inquirer");
-const { makeName } = require("./Functions");
+import { prompt } from "inquirer";
+import { makeName } from "./Functions";
 
 class Questionnaire {
-    static async yesOrNo(question) {
+    static async yesOrNo(question: string) {
         // Generate Random Name
         const name = makeName();
 
@@ -11,14 +11,14 @@ class Questionnaire {
             {
                 name,
                 type: "confirm",
-                message: question,
-            },
+                message: question
+            }
         ]);
 
         return answer[name];
     }
 
-    static async ask(question, validate = undefined) {
+    static async ask(question: string, validate: (input?: string) => any) {
         // Generate Random Name
         const name = makeName();
 
@@ -28,12 +28,12 @@ class Questionnaire {
                 type: "input",
                 name,
                 message: question,
-                validate,
-            },
+                validate
+            }
         ]);
 
         return answer[name];
     }
 }
 
-module.exports = Questionnaire;
+export = Questionnaire;
