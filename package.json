@@ -2,10 +2,10 @@
   "name": "xjs-cli",
   "version": "0.4.2",
   "description": "Xpresser Framework Cli",
-  "main": "cli.ts",
+  "main": "cli.js",
   "bin": {
-    "xjs": "cli.ts",
-    "xjs-await": "cli-await.ts"
+    "xjs": "./cli.js",
+    "xjs-await": "./cli-await.js"
   },
   "engines": {
     "node": ">=12"
