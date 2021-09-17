@@ -1,6 +1,6 @@
 {
   "name": "xjs-cli",
-  "version": "0.4.2",
+  "version": "1.0.0",
   "description": "Xpresser Framework Cli",
   "main": "cli.js",
   "bin": {
