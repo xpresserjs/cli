@@ -254,14 +254,7 @@ if (!config) {
     }
 }
 
-program.on("command:*", function () {
-    console.error(
-        "Invalid command: %s\nSee --help for a list of available commands.",
-        program.args.join(" ")
-    );
-    process.exit(1);
-});
-
+program.showSuggestionAfterError();
 program.parse(process.argv);
 
 if (!(process.argv.length > 2)) {
