@@ -5,7 +5,7 @@ server {
 	server_name {{domain}} www.{{domain}};
 
 #	ssl_certificate "cert.pem";
-#   ssl_certificate_key "cert.key";
+#       ssl_certificate_key "cert.key";
 
 
 	location / {
