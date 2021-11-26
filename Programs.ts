@@ -56,14 +56,6 @@ if (!config) {
         .command("nginx:config")
         .description("Create a nginx config file for your project in this directory.")
         .action(() => Commands.nginxConf());
-
-    /**
-     * @deprecated
-     */
-    // program
-    //     .command('install-prod-tools')
-    //     .description('Install Production tools.')
-    //     .action(() => Commands.installProdTools());
 } else {
     program
         .command("repl [repFile]")
