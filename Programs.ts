@@ -19,17 +19,14 @@ const isProd = () => {
  */
 if (config && config.version) {
     const version = config.version;
-    if (version.substr(0, 2) === ">=" && !(packages.version >= version.substr(2))) {
+    if (version.slice(0, 2) === ">=" && !(packages.version >= version.slice(2))) {
         console.log(
             red(
                 `This Project requires xjs-cli version ${version}, upgrade xjs-cli to continue.`
             )
         );
         process.exit();
-    } else if (
-        version.substr(0, 2) === "<=" &&
-        !(packages.version <= version.substr(2))
-    ) {
+    } else if (version.slice(0, 2) === "<=" && !(packages.version <= version.slice(2))) {
         console.log(
             red(
                 `This Project requires xjs-cli version ${version}, downgrade xjs-cli to continue.`

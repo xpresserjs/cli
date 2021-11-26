@@ -115,8 +115,8 @@ export const currentXjsVersion = () => {
         }
     }
 
-    if (version.substr(0, 1) === "^") {
-        version = version.substr(1);
+    if (version.slice(0, 1) === "^") {
+        version = version.slice(1);
     }
 
     return version;

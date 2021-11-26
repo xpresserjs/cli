@@ -51,10 +51,10 @@ const commands = {
         let jsonPath = cliPath("factory/use-xjs-cli.ts.json");
         let fileToJs = file;
 
-        if (file.substr(-3) === ".ts") {
+        if (file.slice(-3) === ".ts") {
             lang = "ts";
             jsonPath = cliPath("factory/use-xjs-cli.ts.json");
-            fileToJs = file.substr(0, file.length - 3) + ".js";
+            fileToJs = file.slice(0, file.length - 3) + ".js";
         }
 
         let fileData = fs.readFileSync(jsonPath).toString();
