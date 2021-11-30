@@ -48,7 +48,7 @@ const commands = {
             return logErrorAndExit(`File: {${file}} not found!`);
         }
 
-        let jsonPath = cliPath("factory/use-xjs-cli.ts.json");
+        let jsonPath = cliPath("factory/use-xjs-cli.js.json");
         let fileToJs = file;
 
         if (file.slice(-3) === ".ts") {
@@ -261,7 +261,6 @@ const commands = {
      * Run CLi Commands in shell
      * @param command
      * @param isDev
-     * @param exit
      * @param fromXjsCli
      */
     cli(command: string, isDev: boolean = true, fromXjsCli = true) {

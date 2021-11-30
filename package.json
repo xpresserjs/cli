@@ -8,6 +8,7 @@
     "xjs-await": "./cli-await.js"
   },
   "scripts": {
+    "watch": "npx tsc --watch",
     "prepublishOnly": "npx tsc"
   },
   "engines": {
