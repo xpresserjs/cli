@@ -19,8 +19,7 @@ import { exec } from "shelljs";
 import Questionnaire = require("./Questionaire");
 import ObjectCollection = require("object-collection");
 import { xc_docsReference, xpresserNpmId } from "./Constants";
-
-const _ = ObjectCollection.getLodash();
+import _ from "object-collection/lodash";
 
 /**
  * Set DefaultConfig to provide values for undefined keys.
