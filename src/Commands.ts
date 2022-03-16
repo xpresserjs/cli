@@ -13,7 +13,7 @@ import {
 
 import { prompt } from "inquirer";
 import { spawn } from "child_process";
-import { exec, rm } from "shelljs";
+import { exec } from "shelljs";
 import { xc_docsReference, xpresserNpmId } from "./Constants";
 import _ from "object-collection/lodash";
 import fs = require("fs");
@@ -107,7 +107,8 @@ const commands = {
                     `Simple App (Hello World, No views)`,
                     `Using Ejs Template Engine`,
                     `Using Edge Template Engine (similar to Blade template)`,
-                    `Full Stack App (Env, Repl, RequestEngine, Prettier)`
+                    `Full Stack App (Env, Repl, RequestEngine, Prettier)`,
+                    `Full Stack App + MongoDb`
                 ],
                 filter(choice) {
                     if (choice.includes("Simple")) {
@@ -118,6 +119,8 @@ const commands = {
                         choice = "edge";
                     } else if (choice.includes("Full Stack App")) {
                         choice = "fullStackApp";
+                    } else if (choice.includes("MongoDb")) {
+                        choice = "mongodb";
                     }
 
                     return choice;
@@ -149,6 +152,10 @@ const commands = {
                 ][index];
             } else if (type === "fullStackApp") {
                 gitUrl = ["", "" + "https://github.com/xpresserjs/full-stack.git"][index];
+            } else if (type === "mongodb") {
+                gitUrl = ["", "https://github.com/xpresserjs/full-stack-mongodb.git"][
+                    index
+                ];
             }
 
             if (gitUrl === "") {
