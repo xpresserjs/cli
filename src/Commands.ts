@@ -1,25 +1,25 @@
-import { cyan, yellow, whiteBright, white, green } from "chalk";
+import { cyan, green, white, whiteBright, yellow } from "chalk";
 import {
     basePath,
-    log,
-    logErrorAndExit,
     cliPath,
-    logError,
-    yellowWithBars,
     currentXjsVersion,
+    log,
+    logError,
+    logErrorAndExit,
     updateXpresser,
-    xc_globalConfig
+    xc_globalConfig,
+    yellowWithBars
 } from "./Functions";
 
 import { prompt } from "inquirer";
-import fs = require("fs");
-import path = require("path");
 import { spawn } from "child_process";
 import { exec } from "shelljs";
-import Questionnaire = require("./Questionaire");
-import ObjectCollection = require("object-collection");
 import { xc_docsReference, xpresserNpmId } from "./Constants";
 import _ from "object-collection/lodash";
+import fs = require("fs");
+import path = require("path");
+import Questionnaire = require("./Questionaire");
+import ObjectCollection = require("object-collection");
 
 /**
  * Set DefaultConfig to provide values for undefined keys.
@@ -113,7 +113,8 @@ const commands = {
                 choices: [
                     `Simple App (Hello World, No views)`,
                     `Using Ejs Template Engine`,
-                    `Using Edge Template Engine (similar to Blade template)`
+                    `Using Edge Template Engine (similar to Blade template)`,
+                    `Full Stack App (Env, Repl, RequestEngine, Prettier)`
                 ],
                 filter(choice) {
                     if (choice.includes("Simple")) {
@@ -122,6 +123,8 @@ const commands = {
                         choice = "ejs";
                     } else if (choice.includes("Edge")) {
                         choice = "edge";
+                    } else if (choice.includes("Full Stack App")) {
+                        choice = "fullStackApp";
                     }
 
                     return choice;
@@ -145,6 +148,12 @@ const commands = {
                     "https://github.com/xpresserjs/new-app-edge-js.git",
                     "https://github.com/xpresserjs/new-app-edge-ts.git"
                 ][index];
+            } else if (type === "fullStackApp") {
+                gitUrl = ["", "" + "https://github.com/xpresserjs/full-stack.git"][index];
+            }
+
+            if (gitUrl === "") {
+                return logErrorAndExit("Invalid project type.");
             }
 
             const command = `git clone ${gitUrl} ${name}`;
@@ -155,12 +164,11 @@ const commands = {
 
             // Clear .git folder after clone
             const dotGitFolder = `${projectPath}/.git`;
-            if (fs.existsSync(dotGitFolder)) {
-                try {
-                    fs.unlinkSync(dotGitFolder);
-                    exec(`rm -rf ${dotGitFolder}`);
-                } catch {}
-            }
+
+            try {
+                fs.unlinkSync(dotGitFolder);
+                exec(`rm -rf ${dotGitFolder}`);
+            } catch {}
 
             console.log(white(".........."));
             console.log(
