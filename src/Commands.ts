@@ -13,7 +13,7 @@ import {
 
 import { prompt } from "inquirer";
 import { spawn } from "child_process";
-import { exec } from "shelljs";
+import { exec, rm } from "shelljs";
 import { xc_docsReference, xpresserNpmId } from "./Constants";
 import _ from "object-collection/lodash";
 import fs = require("fs");
@@ -72,13 +72,6 @@ const commands = {
      * @returns *
      */
     create(name: string) {
-        const projectPath = path.resolve(`./${name}`);
-
-        if (fs.existsSync(projectPath)) {
-            logError(`Folder ${yellow(name)} already exists`);
-            return logError(`@ ${projectPath}`);
-        }
-
         return prompt([
             {
                 type: "input",
@@ -131,6 +124,12 @@ const commands = {
                 }
             }
         ]).then(({ type, lang }) => {
+            const projectPath = path.resolve(`./${name}`);
+            if (fs.existsSync(projectPath)) {
+                logError(`Folder ${yellow(name)} already exists`);
+                return logError(`@ ${projectPath}`);
+            }
+
             const index = lang === "js" ? 0 : 1;
 
             let gitUrl = [
@@ -156,10 +155,9 @@ const commands = {
                 return logErrorAndExit("Invalid project type.");
             }
 
-            const command = `git clone ${gitUrl} ${name}`;
+            const command = `git  clone ${gitUrl} ${name}`;
 
             log(command);
-
             exec(command);
 
             // Clear .git folder after clone
