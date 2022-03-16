@@ -103,13 +103,22 @@ const commands = {
                 type: "list",
                 name: "type",
                 message: "Project Boilerplate?",
-                choices: [
-                    `Simple App (Hello World, No views)`,
-                    `Using Ejs Template Engine`,
-                    `Using Edge Template Engine (similar to Blade template)`,
-                    `Full Stack App (Env, Repl, RequestEngine, Prettier)`,
-                    `Full Stack App + MongoDb`
-                ],
+                choices: ({ lang }) => {
+                    let choices = [
+                        `Simple App (Hello World, No views)`,
+                        `Using Ejs Template Engine`,
+                        `Using Edge Template Engine (similar to Blade template)`
+                    ];
+
+                    if (lang === "ts") {
+                        choices = choices.concat([
+                            `Full Stack App (Env, Repl, RequestEngine, Prettier)`,
+                            `Full Stack App + MongoDb`
+                        ]);
+                    }
+
+                    return choices;
+                },
                 filter(choice) {
                     if (choice.includes("Simple")) {
                         choice = "simple";
@@ -117,10 +126,10 @@ const commands = {
                         choice = "ejs";
                     } else if (choice.includes("Edge")) {
                         choice = "edge";
-                    } else if (choice.includes("Full Stack App")) {
-                        choice = "fullStackApp";
                     } else if (choice.includes("MongoDb")) {
                         choice = "mongodb";
+                    } else if (choice.includes("Full Stack App")) {
+                        choice = "fullStackApp";
                     }
 
                     return choice;
