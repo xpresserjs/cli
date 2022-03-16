@@ -150,12 +150,12 @@ const commands = {
                     "https://github.com/xpresserjs/new-app-edge-js.git",
                     "https://github.com/xpresserjs/new-app-edge-ts.git"
                 ][index];
-            } else if (type === "fullStackApp") {
-                gitUrl = ["", "" + "https://github.com/xpresserjs/full-stack.git"][index];
             } else if (type === "mongodb") {
                 gitUrl = ["", "https://github.com/xpresserjs/full-stack-mongodb.git"][
                     index
                 ];
+            } else if (type === "fullStackApp") {
+                gitUrl = ["", "" + "https://github.com/xpresserjs/full-stack.git"][index];
             }
 
             if (gitUrl === "") {
