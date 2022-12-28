@@ -17,9 +17,8 @@
   },
   "async_cron_jobs": false,
   "stacks": {
-    "tsc" : [
-      "npx tsc -p tsconfig.json"
+    "tsc": [
+      "npx tsc --build --clean"
     ]
   }
 }
-

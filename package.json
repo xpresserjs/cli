@@ -5,6 +5,7 @@
   "main": "cli.js",
   "bin": {
     "xjs": "./cli.js",
+    "xjs-cli": "./cli.js",
     "xjs-await": "./cli-await.js"
   },
   "scripts": {
