@@ -26,8 +26,8 @@
   "license": "ISC",
   "dependencies": {
     "chalk": "^4.1.2",
-    "commander": "^8.3.0",
-    "cron": "^1.8.2",
+    "commander": "^11.0.0",
+    "cron": "^2.3.1",
     "inquirer": "^8.2.0",
     "object-collection": "^3.0.1"
   },

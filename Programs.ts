@@ -74,12 +74,12 @@ if (!config) {
     program
         .command("up")
         .description("Remove App from maintenance mood.")
-        .action(() => Commands.up() as any);
+        .action(() => Commands.up());
 
     program
         .command("down")
         .description("Put App in maintenance mood.")
-        .action(() => Commands.down() as any);
+        .action(() => Commands.down());
 
     program
         .command("start")
@@ -89,60 +89,54 @@ if (!config) {
     program
         .command("install [plugin]")
         .description("Install plugin.")
-        .action((plugin) => Commands.installPlugin(plugin) as any);
+        .action((plugin) => Commands.installPlugin(plugin));
 
     program
         .command("routes [search] [query]")
         .description("Show routes registered in this project")
-        .action((search, query) => Commands.routes(search, query) as any);
+        .action((search, query) => Commands.routes(search, query));
 
     program
         .command("run <job...>")
         .alias("@")
         .description("Run Jobs")
-        .action((name) => Commands.runJob(name) as any);
+        .action((name) => Commands.runJob(name, isProd()));
 
     program
         .command("stack <stack>")
         .description("Display stack commands.")
-        .action((stack) => Commands.stack(stack, config) as any);
+        .action((stack) => Commands.stack(stack, config));
 
     program
         .command("@stack <stack>")
-        // .alias('@stack')
         .description("Run stack")
         .action((stack) => Commands.runStack(stack, config));
 
     program
         .command("make:job <name> [command]")
-        // .alias('mk:job')
         .description("Generate new Job.")
-        .action((name, command) => Commands.makeJob(name, command) as any);
+        .action((name, command) => Commands.makeJob(name, command));
 
     program
         .command("make:event <name> [namespace]")
-        // .alias('mk:job')
         .description("Generate new event file.")
-        .action((name, namespace) => Commands.makeEvent(name, namespace) as any);
+        .action((name, namespace) => Commands.makeEvent(name, namespace));
 
     program
         .command("make:view <name>")
-        // .alias('mk:v')
         .description("Generate new view file.")
-        .action((name) => Commands.makeView(name) as any);
+        .action((name) => Commands.makeView(name));
 
     program
         .command("make:model <name> [table]")
-        // .alias('mk:model')
         .description("Generate new Model file.")
-        .action((name, table) => Commands.makeModel(name, table) as any);
+        .action((name, table) => Commands.makeModel(name, table));
 
     program
         .command("make:controller [name]")
-        // .alias('mk:ctrl')
         .description("Generate new Controller file.")
         .action((name, args) => {
-            return Commands.makeController(name, args) as any;
+            return Commands.makeController(name, args);
         })
         .option("-c, --class", "Controller Class")
         .option("-o, --object", "Controller Object")
@@ -150,15 +144,13 @@ if (!config) {
 
     program
         .command("make:controllerService <name>")
-        // .alias('mk:model')
         .description("Generate new Controller Service file.")
-        .action((name) => Commands.makeControllerService(name) as any);
+        .action((name) => Commands.makeControllerService(name));
 
     program
         .command("make:middleware <name>")
-        // .alias('mk:guard')
         .description("Generate new Middleware.")
-        .action((name) => Commands.makeMiddleware(name) as any);
+        .action((name) => Commands.makeMiddleware(name));
 
     program
         .command("cron [from_cmd]")
@@ -182,9 +174,8 @@ if (!config) {
         .command("import <plugin> <folder> [overwrite]")
         .alias("publish")
         .description("Extract a folder from it's plugin directory.")
-        .action(
-            (plugin, folder, overwrite) =>
-                Commands.import(plugin, folder, overwrite) as any
+        .action((plugin, folder, overwrite) =>
+            Commands.import(plugin, folder, overwrite)
         );
 
     program

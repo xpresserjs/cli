@@ -278,44 +278,45 @@ const commands = {
     /**
      * Run CLi Commands in shell
      * @param command
-     * @param isDev
+     * @param isProd
      * @param fromXjsCli
      */
-    cli(command: string, isDev: boolean = true, fromXjsCli = true) {
-        command = this.cliCommand(command, isDev, fromXjsCli);
-
-        return execSyncSilently(command);
+    cli(command: string, isProd: boolean = false, fromXjsCli = true) {
+        command = this.cliCommand(command, isProd, fromXjsCli);
+        execSyncAndInherit(command);
     },
 
     /**
      * Run CLi Commands in shell
      * @param command
-     * @param isDev
+     * @param isProd
      */
-    cliSpawn(command: string, isDev: boolean = true) {
-        command = this.cliCommand(command, isDev);
+    cliSpawn(command: string, isProd: boolean = false) {
+        command = this.cliCommand(command, isProd);
+
         const $commands = command.trim().split(" ");
         const [, ...$afterFirstCommand] = $commands;
-        const $process = spawn($commands[0], $afterFirstCommand);
 
-        $process.stdout.on("data", (msg) => {
-            console.log(msg.toString().trim());
+        spawn($commands[0], $afterFirstCommand, {
+            stdio: "inherit"
         });
     },
 
     /**
      * Command generator helper.
      * @param command
-     * @param isDev
+     * @param isProd
      * @param fromXjsCli
      * @returns {string}
      */
-    cliCommand(command: string, isDev: boolean = true, fromXjsCli = true) {
-        const config = xc_globalConfig()!.get(isDev ? "dev" : "prod");
+    cliCommand(command: string, isProd: boolean = false, fromXjsCli = true) {
+        const config = xc_globalConfig()!.get(isProd ? "prod" : "dev");
 
-        return `${config["start_console"]} ${config.main} cli ${command} ${
+        command = `${config["start_console"]} ${config.main} cli ${command} ${
             fromXjsCli ? "--from-xjs-cli" : ""
         }`.trim();
+
+        return command;
     },
 
     /**
@@ -478,10 +479,11 @@ const commands = {
     /**
      * Run cron Job
      * @param args
+     * @param isProd
      * @returns {*|void}
      */
-    runJob(args: string[]) {
-        return this.cli("@" + args.join(" "));
+    runJob(args: string[], isProd: boolean = false) {
+        return this.cli("@" + args.join(" "), isProd);
     },
 
     /**
@@ -543,10 +545,11 @@ const commands = {
     /**
      * Run cron Job
      * @param args
+     * @param isProd
      * @returns {*|void}
      */
-    spawnJob(args: string[]) {
-        return this.cliSpawn("@" + args.join(" "));
+    spawnJob(args: string[], isProd: boolean = false) {
+        return this.cliSpawn("@" + args.join(" "), isProd);
     },
 
     /**
@@ -560,6 +563,7 @@ const commands = {
         const config = gConfig.path(isProduction ? "prod" : "dev");
         const jobsPath = basePath(config.get("jobs_path", "backend/jobs"));
         let cronJsPath = jobsPath + "/cron.json";
+        const isCmdFile = from === "cmd";
 
         if (!fs.existsSync(cronJsPath)) {
             // Try cron.json
@@ -583,10 +587,12 @@ const commands = {
             fs.writeFileSync(cronCmd, fs.readFileSync(cliPath("factory/cron-cmd.txt")));
         }
 
-        if (from === undefined && isProduction) {
+        console.log("cronCmd", { from, isProduction, isCmdFile });
+        console.log(gConfig);
+
+        if (!isCmdFile && isProduction) {
             const start_cron = gConfig.get("prod.start_cron");
             let startCronCmd = execSyncSilently(`${start_cron} cron-cmd.js`);
-
             if (startCronCmd.error) {
                 return logError(startCronCmd.error);
             }
@@ -595,7 +601,6 @@ const commands = {
         }
 
         const spawnCron = gConfig.get("async_cron_jobs", false);
-
         if (spawnCron) log("Running Asynchronously...");
 
         for (const cronJob of cronJobs) {
@@ -624,6 +629,7 @@ const commands = {
 
             const timezone = (cronJob["timezone"] =
                 cronJob["timezone"] || process.env.TZ || "America/Los_Angeles");
+
             /**
              * Register Cron Jobs
              */
@@ -635,7 +641,7 @@ const commands = {
                      */
                     try {
                         if (spawnCron) {
-                            return commands.spawnJob([item, ...args]);
+                            return commands.spawnJob([item, ...args], isProduction);
                         } else {
                             return commands.runJob([item, ...args]);
                         }
