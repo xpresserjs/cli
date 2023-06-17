@@ -14,6 +14,7 @@ import {
     currentXjsVersion,
     execSyncAndInherit,
     execSyncSilently,
+    isProd,
     jsonFromFile,
     log,
     logError,
@@ -279,21 +280,19 @@ const commands = {
     /**
      * Run CLi Commands in shell
      * @param command
-     * @param isProd
      * @param fromXjsCli
      */
-    cli(command: string, isProd: boolean = false, fromXjsCli = true) {
-        command = this.cliCommand(command, isProd, fromXjsCli);
+    cli(command: string, fromXjsCli = true) {
+        command = this.cliCommand(command, fromXjsCli);
         execSyncAndInherit(command);
     },
 
     /**
-     * Run CLi Commands in shell
+     * Run CLi Commands in shell using spawn
      * @param command
-     * @param isProd
      */
-    cliSpawn(command: string, isProd: boolean = false) {
-        command = this.cliCommand(command, isProd);
+    cliSpawn(command: string) {
+        command = this.cliCommand(command);
 
         const $commands = command.trim().split(" ");
         const [, ...$afterFirstCommand] = $commands;
@@ -306,20 +305,24 @@ const commands = {
     /**
      * Command generator helper.
      * @param command
-     * @param isProd
      * @param fromXjsCli
      * @returns {string}
      */
-    cliCommand(command: string, isProd: boolean = false, fromXjsCli = true) {
-        const config = xc_globalConfig()!.get(isProd ? "prod" : "dev");
+    cliCommand(command: string, fromXjsCli = true) {
+        const config = xc_globalConfig()!.get(isProd() ? "prod" : "dev");
 
-        command = `${config["start_console"]} ${config.main} cli ${command} ${
-            fromXjsCli ? "--from-xjs-cli" : ""
-        }`.trim();
+        command = `${config["start_console"]} ${config.main} cli ${command}`;
+        if (fromXjsCli) {
+            command += " --from-xjs-cli";
+        }
 
-        console.log(white(".........."));
-        console.log(green("Running: ") + white(command));
-        console.log(white(".........."));
+        command = command.trim();
+
+        if (showCommand()) {
+            console.log(white(".........."));
+            console.log(green("Running: ") + white(command));
+            console.log(white(".........."));
+        }
 
         return command;
     },
@@ -484,12 +487,10 @@ const commands = {
     /**
      * Run cron Job
      * @param args
-     * @param isProd
      * @returns {*|void}
      */
-    runJob(args: string[], isProd: boolean = false) {
-        console.log("ShowCommand:", showCommand());
-        return this.cli("@" + args.join(" "), isProd);
+    runJob(args: string[]) {
+        return this.cli("@" + args.join(" "));
     },
 
     /**
@@ -551,20 +552,18 @@ const commands = {
     /**
      * Run cron Job
      * @param args
-     * @param isProd
      * @returns {*|void}
      */
-    spawnJob(args: string[], isProd: boolean = false) {
-        return this.cliSpawn("@" + args.join(" "), isProd);
+    spawnJob(args: string[]) {
+        return this.cliSpawn("@" + args.join(" "));
     },
 
     /**
      * Run Cron Jobs
      * @param isProduction
      * @param from
-     * @param showObject
      */
-    cron(isProduction = false, from = undefined, showObject = false) {
+    cron(isProduction = false, from = undefined) {
         const gConfig = xc_globalConfig()!;
         const config = gConfig.path(isProduction ? "prod" : "dev");
         const jobsPath = basePath(config.get("jobs_path", "backend/jobs"));
@@ -642,9 +641,9 @@ const commands = {
                      */
                     try {
                         if (spawnCron) {
-                            return commands.spawnJob([item, ...args], isProduction);
+                            return commands.spawnJob([item, ...args]);
                         } else {
-                            return commands.runJob([item, ...args], isProduction);
+                            return commands.runJob([item, ...args]);
                         }
                     } catch (e: any) {
                         logError(`Job Error: {${item}}`);
@@ -662,7 +661,7 @@ const commands = {
     },
 
     /**
-     * Check for Xpresser Update in project
+     * Check for Xpresser Update in a project
      */
     checkForUpdate() {
         log("Checking npm registry for version update...");
@@ -736,7 +735,7 @@ const commands = {
     },
 
     /**
-     * Publish Folders into project
+     * Publish Folders
      * @param plugin
      * @param folder
      * @param overwrite

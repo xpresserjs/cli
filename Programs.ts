@@ -86,7 +86,7 @@ if (!config) {
         .command("run <job...>")
         .alias("@")
         .description("Run Jobs")
-        .action((name) => Commands.runJob(name, isProd()));
+        .action((name) => Commands.runJob(name));
 
     program
         .command("stack <stack>")
@@ -143,7 +143,7 @@ if (!config) {
         .description("Start cron registered commands.")
         .option("-o, --object", "Show job object")
         .action((from_cmd, options) => {
-            Commands.cron(isProd(), from_cmd, options.object);
+            Commands.cron(isProd(), from_cmd);
         });
 
     program
@@ -221,7 +221,7 @@ if (!config) {
 
                         let command = (action + " " + commands.join(" ")).trim();
 
-                        Commands.cli(command, true, false);
+                        Commands.cli(command, false);
                     });
             }
         }
