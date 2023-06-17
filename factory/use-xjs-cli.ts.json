@@ -13,7 +13,7 @@
     "start_server": "npx pm2 start",
     "stop_server": "npx pm2 stop",
     "start_console": "node",
-    "jobs_path": "dist/backend/jobs"
+    "jobs_path": "build/backend/jobs"
   },
   "async_cron_jobs": false,
   "stacks": {

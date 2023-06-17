@@ -4,9 +4,33 @@ import { execSync, ExecSyncOptions } from "child_process";
 import ObjectCollection from "object-collection";
 import { xpresserNpmId } from "./Constants";
 import { cyan, magenta, red, white, yellow } from "chalk";
+import { program } from "commander";
 
 // @ts-ignore
 export const xc_globalConfig = (): ObjectCollection | undefined => global["XjsCliConfig"];
+
+/**
+ * Get Option
+ * @param opt
+ */
+export function getOption(opt: string) {
+    const opts = program.opts();
+    return opts[opt];
+}
+
+/**
+ * check if --prod is passed
+ */
+export function isProd() {
+    return getOption("prod");
+}
+
+/**
+ * check if --show-command is passed
+ */
+export function showCommand() {
+    return getOption("showCommand");
+}
 
 /**
  * Get a Base path

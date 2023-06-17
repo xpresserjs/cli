@@ -19,6 +19,7 @@ import {
     logError,
     logErrorAndExit,
     logInfo,
+    showCommand,
     updateXpresser,
     xc_globalConfig,
     yellowWithBars
@@ -316,6 +317,10 @@ const commands = {
             fromXjsCli ? "--from-xjs-cli" : ""
         }`.trim();
 
+        console.log(white(".........."));
+        console.log(green("Running: ") + white(command));
+        console.log(white(".........."));
+
         return command;
     },
 
@@ -483,6 +488,7 @@ const commands = {
      * @returns {*|void}
      */
     runJob(args: string[], isProd: boolean = false) {
+        console.log("ShowCommand:", showCommand());
         return this.cli("@" + args.join(" "), isProd);
     },
 
@@ -587,15 +593,10 @@ const commands = {
             fs.writeFileSync(cronCmd, fs.readFileSync(cliPath("factory/cron-cmd.txt")));
         }
 
-        console.log("cronCmd", { from, isProduction, isCmdFile });
-        console.log(gConfig);
-
         if (!isCmdFile && isProduction) {
             const start_cron = gConfig.get("prod.start_cron");
             let startCronCmd = execSyncSilently(`${start_cron} cron-cmd.js`);
-            if (startCronCmd.error) {
-                return logError(startCronCmd.error);
-            }
+            if (startCronCmd.error) return logError(startCronCmd.error);
 
             return log("Cron Started.");
         }
@@ -643,7 +644,7 @@ const commands = {
                         if (spawnCron) {
                             return commands.spawnJob([item, ...args], isProduction);
                         } else {
-                            return commands.runJob([item, ...args]);
+                            return commands.runJob([item, ...args], isProduction);
                         }
                     } catch (e: any) {
                         logError(`Job Error: {${item}}`);

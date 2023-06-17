@@ -4,24 +4,9 @@ import { program } from "commander";
 import { red } from "chalk";
 import Commands from "./src/Commands";
 import packages from "./package.json";
+import { isProd } from "./src/Functions";
 
 const config = Commands.checkIfInXjsFolder(true, true);
-
-/**
- * Get Option
- * @param opt
- */
-const getOption = (opt: string) => {
-    const opts = program.opts();
-    return opts[opt];
-};
-
-/**
- * check if --prod is passed
- */
-const isProd = () => {
-    return getOption("prod");
-};
 
 /**
  * If config.version is present in config then run a version check.
@@ -46,6 +31,7 @@ if (config && config.version) {
 }
 
 program.option("-p --prod", "Use production config.");
+program.option("-sc --show-command", "Show command being executed.");
 
 program.version(packages.version).description("XpresserJs Framework CLI");
 
