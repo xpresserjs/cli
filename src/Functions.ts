@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import { resolve } from "node:path";
-import { exec } from "shelljs";
+import { execSync, ExecSyncOptions } from "child_process";
 import ObjectCollection from "object-collection";
 import { xpresserNpmId } from "./Constants";
 import { cyan, magenta, red, white, yellow } from "chalk";
@@ -9,9 +9,9 @@ import { cyan, magenta, red, white, yellow } from "chalk";
 export const xc_globalConfig = (): ObjectCollection | undefined => global["XjsCliConfig"];
 
 /**
- * Get Base path
+ * Get a Base path
  *
- * Same as current working directory.
+ * Same as the current working directory.
  * @param path
  * @return {string|*}
  */
@@ -133,104 +133,70 @@ export function hasYarnLock() {
 }
 
 /**
- * Update project using yarn or npm
+ * Update xpresser using yarn or npm
  * @return {*}
  */
 export function updateXpresser() {
     let command = `npm install ${xpresserNpmId} --save --no-audit --silent`;
 
-    if (hasYarnLock()) {
+    if (!hasYarnLock()) {
         log("Using Yarn...");
         command = `yarn add ${xpresserNpmId} --silent`;
     } else {
         log("Using Npm...");
         // if NPM remove xpresser first
-        exec(`npm remove ${xpresserNpmId}`, { silent: true });
+        execSyncSilently(`npm remove ${xpresserNpmId}`);
     }
 
     console.log(white("............"));
     log("Updating....");
     console.log(white("............"));
 
-    exec(command);
+    execSyncSilently(command);
 
     console.log(white("............"));
     log(`${xpresserNpmId} updated successfully.`);
 }
 
 /**
- * Get All files in a given path.
- * @param path
- * @returns {Array}
+ * get json content from file
+ * @param file
  */
-export function getAllFiles(path: string) {
-    let list: string[] = [];
-
-    if (fs.existsSync(path)) {
-        const files = fs.readdirSync(path);
-
-        for (const file of files) {
-            const fullPath = path + "/" + file;
-
-            if (fs.lstatSync(fullPath).isDirectory()) {
-                const folderFiles = getAllFiles(fullPath);
-                for (const folderFile of folderFiles) {
-                    list.push(folderFile);
-                }
-            } else {
-                list.push(fullPath);
-            }
-        }
-    }
-
-    return list;
-}
-
-/**
- * Loads project jobs.
- * @param {string} path
- * @deprecated
- * @return {{}}
- * */
-export function loadJobs(path = "") {
-    /**
-     * Default to 'backend/jobs'
-     * Cli assumes we are making use of the xpresser framework structure.
-     */
-    if (!path || path === "") {
-        path = basePath("backend/jobs");
-    }
-
-    const $commands: Record<string, any> = {};
-
-    const files = getAllFiles(path);
-
-    for (const file of files) {
-        const jobFile = file.replace(path, "");
-        const job = require(file);
-
-        if (typeof job !== "object") {
-            logErrorAndExit("Job: {" + jobFile + "} did not return object!");
-
-            if (job.hasOwnProperty("command") || !job.hasOwnProperty("handler")) {
-                logErrorAndExit("Job: {" + jobFile + "} is not structured properly!");
-            }
-        }
-
-        if (typeof job.schedule === "function") {
-            job.schedule = job.schedule();
-        }
-
-        if (typeof job.schedule === "string") {
-            job.path = file;
-            $commands[job.command] = job;
-        }
-    }
-
-    return $commands;
-}
-
 export function jsonFromFile(file: string) {
     const json = fs.readFileSync(file).toString();
     return JSON.parse(json);
+}
+
+/**
+ * Custom ExecSync Function
+ *
+ * Note: because this method returns error and result values,
+ * it runs command **silently** with stdio: "pipe" option.
+ */
+export function execSyncSilently(command: string, options: ExecSyncOptions = {}) {
+    let error: string | undefined;
+    let result: string | undefined;
+
+    try {
+        result = execSync(command, { stdio: "pipe", ...options })
+            .toString()
+            .trim();
+    } catch (e: any) {
+        if (e.stderr) error = e.stderr.toString().trim();
+        if (!error && e.stdout) error = e.stdout.toString().trim();
+        if (!error && e.message) error = e.message.toString().trim();
+        if (!error) error = "Unknown Error";
+    }
+
+    // if the result is an empty string, set to undefined
+    if (!result) result = undefined;
+
+    return { error, result };
+}
+
+/**
+ * Exec Sync Inherit
+ */
+export function execSyncAndInherit(command: string) {
+    return execSync(command, { stdio: "inherit" });
 }

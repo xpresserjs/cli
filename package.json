@@ -29,8 +29,7 @@
     "commander": "^8.3.0",
     "cron": "^1.8.2",
     "inquirer": "^8.2.0",
-    "object-collection": "^3.0.1",
-    "shelljs": "^0.8.5"
+    "object-collection": "^3.0.1"
   },
   "devDependencies": {
     "@types/inquirer": "^8.1.3",

@@ -1,9 +1,9 @@
+import fs from "node:fs";
+import { resolve } from "node:path";
 import { program } from "commander";
 import { red } from "chalk";
 import Commands from "./src/Commands";
 import packages from "./package.json";
-import fs from "node:fs";
-import { resolve } from "node:path";
 
 const config = Commands.checkIfInXjsFolder(true, true);
 
@@ -152,7 +152,7 @@ if (!config) {
         .command("make:controllerService <name>")
         // .alias('mk:model')
         .description("Generate new Controller Service file.")
-        .action((name, table) => Commands.makeControllerService(name) as any);
+        .action((name) => Commands.makeControllerService(name) as any);
 
     program
         .command("make:middleware <name>")
