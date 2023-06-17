@@ -20,5 +20,4 @@
     "tsc": [
       "npx tsc --build --clean"
     ]
-  }
 }

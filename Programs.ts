@@ -1,15 +1,24 @@
 import { program } from "commander";
 import { red } from "chalk";
-import Commands = require("./src/Commands");
-import packages = require("./package.json");
+import Commands from "./src/Commands";
+import packages from "./package.json";
+import fs from "node:fs";
+import { resolve } from "node:path";
 
-let config = Commands.checkIfInXjsFolder(true, true);
+const config = Commands.checkIfInXjsFolder(true, true);
 
+/**
+ * Get Option
+ * @param opt
+ */
 const getOption = (opt: string) => {
     const opts = program.opts();
     return opts[opt];
 };
 
+/**
+ * check if --prod is passed
+ */
 const isProd = () => {
     return getOption("prod");
 };
@@ -183,12 +192,11 @@ if (!config) {
         .description("Update xpresser using your desired package manager.")
         .action(() => Commands.checkForUpdate());
 
+    /**
+     * Add Extensions from use-xjs-cli.json file.
+     */
     const extensionsPath = config ? config["extensions"] : [];
-
     if (extensionsPath && Array.isArray(extensionsPath) && extensionsPath.length) {
-        const path = require("path");
-        const fs = require("fs");
-
         const extensionExists = (ext: string) => {
             if (!fs.existsSync(ext)) {
                 throw new Error(`Cli Extension Path does not exists: "${ext}"`);
@@ -197,9 +205,9 @@ if (!config) {
 
         for (let extensionPath of extensionsPath) {
             extensionPath = extensionPath.replace("npm://", "node_modules/");
-            extensionPath = path.resolve(extensionPath);
+            extensionPath = resolve(extensionPath);
 
-            // Check if extension exists.
+            // Check if an extension exists.
             extensionExists(extensionPath);
 
             if (fs.statSync(extensionPath).isDirectory()) {
@@ -212,8 +220,8 @@ if (!config) {
                 }
             }
 
+            // Load extension
             const extensions = require(extensionPath);
-
             for (const extension of extensions) {
                 program
                     .command(extension["command"])

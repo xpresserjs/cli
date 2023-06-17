@@ -1,13 +1,12 @@
-import { cyan, yellow, red, magenta, white } from "chalk";
-import fs = require("fs");
-import path = require("path");
+import fs from "node:fs";
+import { resolve } from "node:path";
 import { exec } from "shelljs";
-import ObjectCollection = require("object-collection");
+import ObjectCollection from "object-collection";
 import { xpresserNpmId } from "./Constants";
+import { cyan, magenta, red, white, yellow } from "chalk";
 
-export const xc_globalConfig = (): ObjectCollection | undefined =>
-    // @ts-ignore
-    global["XjsCliConfig"];
+// @ts-ignore
+export const xc_globalConfig = (): ObjectCollection | undefined => global["XjsCliConfig"];
 
 /**
  * Get Base path
@@ -16,19 +15,19 @@ export const xc_globalConfig = (): ObjectCollection | undefined =>
  * @param path
  * @return {string|*}
  */
-export const basePath = (path: string = "") => {
+export function basePath(path: string = "") {
     if (path.length) {
         return process.cwd() + "/" + path;
     }
     return process.cwd();
-};
+}
 
 /**
  * Random String Generator
  * @param length
  * @return {string}
  */
-export const makeName = (length: number = 10) => {
+export function makeName(length: number = 10) {
     let result = "";
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     const charactersLength = characters.length;
@@ -36,7 +35,7 @@ export const makeName = (length: number = 10) => {
         result += characters.charAt(Math.floor(Math.random() * charactersLength));
     }
     return result;
-};
+}
 
 /**
  * Xjs Cli Path
@@ -45,38 +44,38 @@ export const makeName = (length: number = 10) => {
  * @param $path
  * @return {string}
  */
-export const cliPath = ($path = "") => {
-    return path.resolve(__dirname + "/../" + $path);
-};
+export function cliPath($path = "") {
+    return resolve(__dirname + "/../" + $path);
+}
 
 /**
  * Simple Log Function
  * Using Cyan Color
  * @param args
  */
-export const log = (...args: any[]) => {
+export function log(...args: any[]) {
     args.unshift("=> ");
     console.log(cyan(...args));
-};
+}
 
 /**
  * Simple Log Function
  * Using Cyan Color
  * @param args
  */
-export const logInfo = (...args: any[]) => {
+export function logInfo(...args: any[]) {
     args.unshift("=> ");
     console.log(magenta(...args));
-};
+}
 
 /**
  * Error Log Function
  * Using Red Color
  * @param args
  */
-export const logError = (...args: any[]) => {
+export function logError(...args: any[]) {
     console.error(red(...args));
-};
+}
 
 /**
  * LogError And Exit
@@ -84,23 +83,25 @@ export const logError = (...args: any[]) => {
  * logs error then exists program.
  * @param args
  */
-export const logErrorAndExit = (...args: any[]) => {
+export function logErrorAndExit(...args: any[]) {
     if (args.length) {
         args.unshift("Error: ");
         logError(...args);
     }
 
     process.exit();
-};
+}
 
 // Define Colors with bars helper function
-export const yellowWithBars = (str: string) => yellow("{" + str.trim() + "}");
+export function yellowWithBars(str: string) {
+    return yellow("{" + str.trim() + "}");
+}
 
 /**
  * Get current XjsVersion from package.json
  * @return {string}
  */
-export const currentXjsVersion = () => {
+export function currentXjsVersion() {
     let packageDotJson = require(basePath("package.json"));
 
     let packages = packageDotJson["dependencies"];
@@ -120,23 +121,25 @@ export const currentXjsVersion = () => {
     }
 
     return version;
-};
+}
 
 /**
  * Check if xpresser project uses yarn.
  * @return {boolean}
  * @constructor
  */
-export const HasYarnLock = () => fs.existsSync(basePath("yarn.lock"));
+export function hasYarnLock() {
+    return fs.existsSync(basePath("yarn.lock"));
+}
 
 /**
  * Update project using yarn or npm
  * @return {*}
  */
-export const updateXpresser = () => {
+export function updateXpresser() {
     let command = `npm install ${xpresserNpmId} --save --no-audit --silent`;
 
-    if (HasYarnLock()) {
+    if (hasYarnLock()) {
         log("Using Yarn...");
         command = `yarn add ${xpresserNpmId} --silent`;
     } else {
@@ -153,14 +156,14 @@ export const updateXpresser = () => {
 
     console.log(white("............"));
     log(`${xpresserNpmId} updated successfully.`);
-};
+}
 
 /**
  * Get All files in a given path.
  * @param path
  * @returns {Array}
  */
-export const getAllFiles = (path: string) => {
+export function getAllFiles(path: string) {
     let list: string[] = [];
 
     if (fs.existsSync(path)) {
@@ -181,7 +184,7 @@ export const getAllFiles = (path: string) => {
     }
 
     return list;
-};
+}
 
 /**
  * Loads project jobs.
@@ -189,9 +192,9 @@ export const getAllFiles = (path: string) => {
  * @deprecated
  * @return {{}}
  * */
-export const loadJobs = function (path = "") {
+export function loadJobs(path = "") {
     /**
-     * Defaults to 'backend/jobs'
+     * Default to 'backend/jobs'
      * Cli assumes we are making use of the xpresser framework structure.
      */
     if (!path || path === "") {
@@ -225,9 +228,9 @@ export const loadJobs = function (path = "") {
     }
 
     return $commands;
-};
+}
 
-export const jsonFromFile = (file: string) => {
+export function jsonFromFile(file: string) {
     const json = fs.readFileSync(file).toString();
     return JSON.parse(json);
-};
+}

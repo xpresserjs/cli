@@ -1,8 +1,15 @@
+import fs from "node:fs";
+import path from "node:path";
+import { spawn } from "node:child_process";
 import { cyan, green, white, whiteBright, yellow } from "chalk";
+/**
+ * Set DefaultConfig to provide values for undefined keys.
+ */
 import {
     basePath,
     cliPath,
     currentXjsVersion,
+    jsonFromFile,
     log,
     logError,
     logErrorAndExit,
@@ -12,20 +19,12 @@ import {
 } from "./Functions";
 
 import { prompt } from "inquirer";
-import { spawn } from "child_process";
 import { exec } from "shelljs";
 import { xc_docsReference, xpresserNpmId } from "./Constants";
 import _ from "object-collection/lodash";
-import fs = require("fs");
-import path = require("path");
-import Questionnaire = require("./Questionaire");
-import ObjectCollection = require("object-collection");
-
-/**
- * Set DefaultConfig to provide values for undefined keys.
- */
-const defaultConfig = require("../factory/use-xjs-cli.js");
-const { jsonFromFile } = require("./Functions");
+import Questionnaire from "./Questionaire";
+import ObjectCollection from "object-collection";
+import DefaultConfig from "../factory/use-xjs-cli.js.json";
 
 /**
  * List Of Commands
@@ -221,7 +220,7 @@ const commands = {
                 try {
                     let config = require(appHasXjs);
                     if (typeof config === "object") {
-                        config = _.merge(defaultConfig, config);
+                        config = _.merge(DefaultConfig, config);
                         // @ts-ignore
                         globalConfig = global["XjsCliConfig"] = new ObjectCollection(
                             config
