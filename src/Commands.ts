@@ -284,7 +284,12 @@ const commands = {
      */
     cli(command: string, fromXjsCli = true) {
         command = this.cliCommand(command, fromXjsCli);
-        execSyncAndInherit(command);
+
+        try {
+            execSyncAndInherit(command);
+        } catch (e: any) {
+            // do nothing
+        }
     },
 
     /**
