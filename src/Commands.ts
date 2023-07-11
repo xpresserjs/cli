@@ -137,8 +137,11 @@ const commands = {
         ]).then(({ type, lang }) => {
             const projectPath = path.resolve(`./${name}`);
             if (fs.existsSync(projectPath)) {
-                logError(`Folder ${yellow(name)} already exists`);
-                return logError(`@ ${projectPath}`);
+                const files = fs.readdirSync(projectPath);
+                if (files.length > 0) {
+                    logError(`Folder ${yellow(name)} already exists and is not empty`);
+                    return logError(`@ ${projectPath}`);
+                }
             }
 
             const index = lang === "js" ? 0 : 1;
@@ -170,7 +173,7 @@ const commands = {
                 return logErrorAndExit("Invalid project type.");
             }
 
-            const command = `git  clone ${gitUrl} ${name}`;
+            const command = `git clone ${gitUrl} ${name}`;
             try {
                 execSyncAndInherit(command);
             } catch (e: any) {
@@ -181,8 +184,7 @@ const commands = {
             const dotGitFolder = `${projectPath}/.git`;
 
             try {
-                fs.unlinkSync(dotGitFolder);
-                execSyncAndInherit(`rm -rf ${dotGitFolder}`);
+                fs.rmSync(dotGitFolder, { recursive: true, force: true });
             } catch (e: any) {
                 // do nothing
             }
