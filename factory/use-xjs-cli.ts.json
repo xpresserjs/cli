@@ -18,7 +18,8 @@
   "async_cron_jobs": false,
   "stacks": {
     "tsc": [
-      "npx tsc --build --clean"
+      "rm -rf build",
+      "npx tsc --build"
     ]
   }
 }
