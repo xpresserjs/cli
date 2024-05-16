@@ -2,7 +2,7 @@
   "dev": {
     "main": "{{main}}",
     "start_cron": "npx ts-node",
-    "start_server": "npx tsx --watch",
+    "start_server": "npx tsx watch",
     "start_console": "npx ts-node",
     "jobs_path": "backend/jobs"
   },
