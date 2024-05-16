@@ -1,18 +1,12 @@
+import fs from "node:fs";
+import { resolve } from "node:path";
 import { program } from "commander";
 import { red } from "chalk";
-import Commands = require("./src/Commands");
-import packages = require("./package.json");
+import Commands from "./src/Commands";
+import packages from "./package.json";
+import { isProd } from "./src/Functions";
 
-let config = Commands.checkIfInXjsFolder(true, true);
-
-const getOption = (opt: string) => {
-    const opts = program.opts();
-    return opts[opt];
-};
-
-const isProd = () => {
-    return getOption("prod");
-};
+const config = Commands.checkIfInXjsFolder(true, true);
 
 /**
  * If config.version is present in config then run a version check.
@@ -37,6 +31,7 @@ if (config && config.version) {
 }
 
 program.option("-p --prod", "Use production config.");
+program.option("-sc --show-command", "Show command being executed.");
 
 program.version(packages.version).description("XpresserJs Framework CLI");
 
@@ -65,12 +60,12 @@ if (!config) {
     program
         .command("up")
         .description("Remove App from maintenance mood.")
-        .action(() => Commands.up() as any);
+        .action(() => Commands.up());
 
     program
         .command("down")
         .description("Put App in maintenance mood.")
-        .action(() => Commands.down() as any);
+        .action(() => Commands.down());
 
     program
         .command("start")
@@ -80,60 +75,54 @@ if (!config) {
     program
         .command("install [plugin]")
         .description("Install plugin.")
-        .action((plugin) => Commands.installPlugin(plugin) as any);
+        .action((plugin) => Commands.installPlugin(plugin));
 
     program
         .command("routes [search] [query]")
         .description("Show routes registered in this project")
-        .action((search, query) => Commands.routes(search, query) as any);
+        .action((search, query) => Commands.routes(search, query));
 
     program
         .command("run <job...>")
         .alias("@")
         .description("Run Jobs")
-        .action((name) => Commands.runJob(name) as any);
+        .action((name) => Commands.runJob(name));
 
     program
         .command("stack <stack>")
         .description("Display stack commands.")
-        .action((stack) => Commands.stack(stack, config) as any);
+        .action((stack) => Commands.stack(stack, config));
 
     program
         .command("@stack <stack>")
-        // .alias('@stack')
         .description("Run stack")
         .action((stack) => Commands.runStack(stack, config));
 
     program
         .command("make:job <name> [command]")
-        // .alias('mk:job')
         .description("Generate new Job.")
-        .action((name, command) => Commands.makeJob(name, command) as any);
+        .action((name, command) => Commands.makeJob(name, command));
 
     program
         .command("make:event <name> [namespace]")
-        // .alias('mk:job')
         .description("Generate new event file.")
-        .action((name, namespace) => Commands.makeEvent(name, namespace) as any);
+        .action((name, namespace) => Commands.makeEvent(name, namespace));
 
     program
         .command("make:view <name>")
-        // .alias('mk:v')
         .description("Generate new view file.")
-        .action((name) => Commands.makeView(name) as any);
+        .action((name) => Commands.makeView(name));
 
     program
         .command("make:model <name> [table]")
-        // .alias('mk:model')
         .description("Generate new Model file.")
-        .action((name, table) => Commands.makeModel(name, table) as any);
+        .action((name, table) => Commands.makeModel(name, table));
 
     program
         .command("make:controller [name]")
-        // .alias('mk:ctrl')
         .description("Generate new Controller file.")
         .action((name, args) => {
-            return Commands.makeController(name, args) as any;
+            return Commands.makeController(name, args);
         })
         .option("-c, --class", "Controller Class")
         .option("-o, --object", "Controller Object")
@@ -141,22 +130,20 @@ if (!config) {
 
     program
         .command("make:controllerService <name>")
-        // .alias('mk:model')
         .description("Generate new Controller Service file.")
-        .action((name, table) => Commands.makeControllerService(name) as any);
+        .action((name) => Commands.makeControllerService(name));
 
     program
         .command("make:middleware <name>")
-        // .alias('mk:guard')
         .description("Generate new Middleware.")
-        .action((name) => Commands.makeMiddleware(name) as any);
+        .action((name) => Commands.makeMiddleware(name));
 
     program
         .command("cron [from_cmd]")
         .description("Start cron registered commands.")
         .option("-o, --object", "Show job object")
-        .action((from_cmd, options) => {
-            Commands.cron(isProd(), from_cmd, options.object);
+        .action((from_cmd) => {
+            Commands.cron(isProd(), from_cmd);
         });
 
     program
@@ -173,9 +160,8 @@ if (!config) {
         .command("import <plugin> <folder> [overwrite]")
         .alias("publish")
         .description("Extract a folder from it's plugin directory.")
-        .action(
-            (plugin, folder, overwrite) =>
-                Commands.import(plugin, folder, overwrite) as any
+        .action((plugin, folder, overwrite) =>
+            Commands.import(plugin, folder, overwrite)
         );
 
     program
@@ -183,12 +169,11 @@ if (!config) {
         .description("Update xpresser using your desired package manager.")
         .action(() => Commands.checkForUpdate());
 
+    /**
+     * Add Extensions from use-xjs-cli.json file.
+     */
     const extensionsPath = config ? config["extensions"] : [];
-
     if (extensionsPath && Array.isArray(extensionsPath) && extensionsPath.length) {
-        const path = require("path");
-        const fs = require("fs");
-
         const extensionExists = (ext: string) => {
             if (!fs.existsSync(ext)) {
                 throw new Error(`Cli Extension Path does not exists: "${ext}"`);
@@ -197,9 +182,9 @@ if (!config) {
 
         for (let extensionPath of extensionsPath) {
             extensionPath = extensionPath.replace("npm://", "node_modules/");
-            extensionPath = path.resolve(extensionPath);
+            extensionPath = resolve(extensionPath);
 
-            // Check if extension exists.
+            // Check if an extension exists.
             extensionExists(extensionPath);
 
             if (fs.statSync(extensionPath).isDirectory()) {
@@ -212,8 +197,8 @@ if (!config) {
                 }
             }
 
+            // Load extension
             const extensions = require(extensionPath);
-
             for (const extension of extensions) {
                 program
                     .command(extension["command"])
@@ -236,7 +221,7 @@ if (!config) {
 
                         let command = (action + " " + commands.join(" ")).trim();
 
-                        Commands.cli(command, true, false);
+                        Commands.cli(command, false);
                     });
             }
         }

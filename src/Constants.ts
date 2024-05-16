@@ -2,7 +2,7 @@
  * Xpresser Npm ID
  * @type {string}
  */
-export const xpresserNpmId = "xpresser";
+export const xpresserNpmId: string = "xpresser";
 
 /**
  * Reference to docs links

@@ -1,34 +1,57 @@
-import { cyan, yellow, red, magenta, white } from "chalk";
-import fs = require("fs");
-import path = require("path");
-import { exec } from "shelljs";
-import ObjectCollection = require("object-collection");
+import fs from "node:fs";
+import { resolve } from "node:path";
+import { execSync, ExecSyncOptions } from "child_process";
+import ObjectCollection from "object-collection";
 import { xpresserNpmId } from "./Constants";
+import { cyan, magenta, red, white, yellow } from "chalk";
+import { program } from "commander";
 
-export const xc_globalConfig = (): ObjectCollection | undefined =>
-    // @ts-ignore
-    global["XjsCliConfig"];
+// @ts-ignore
+export const xc_globalConfig = (): ObjectCollection | undefined => global["XjsCliConfig"];
 
 /**
- * Get Base path
- *
- * Same as current working directory.
- * @param path
- * @return {string|*}
+ * Get Option
+ * @param opt
  */
-export const basePath = (path: string = "") => {
+export function getOption(opt: string) {
+    const opts = program.opts();
+    return opts[opt];
+}
+
+/**
+ * check if --prod is passed
+ */
+export function isProd() {
+    return getOption("prod") === true;
+}
+
+/**
+ * check if --show-command is passed
+ */
+export function showCommand() {
+    return getOption("showCommand");
+}
+
+/**
+ * Get a Base path
+ *
+ * Same as the current working directory.
+ * @param path
+ * @return {string}
+ */
+export function basePath(path: string = ""): string {
     if (path.length) {
         return process.cwd() + "/" + path;
     }
     return process.cwd();
-};
+}
 
 /**
  * Random String Generator
  * @param length
  * @return {string}
  */
-export const makeName = (length: number = 10) => {
+export function makeName(length: number = 10): string {
     let result = "";
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     const charactersLength = characters.length;
@@ -36,7 +59,7 @@ export const makeName = (length: number = 10) => {
         result += characters.charAt(Math.floor(Math.random() * charactersLength));
     }
     return result;
-};
+}
 
 /**
  * Xjs Cli Path
@@ -45,38 +68,38 @@ export const makeName = (length: number = 10) => {
  * @param $path
  * @return {string}
  */
-export const cliPath = ($path = "") => {
-    return path.resolve(__dirname + "/../" + $path);
-};
+export function cliPath($path = ""): string {
+    return resolve(__dirname + "/../" + $path);
+}
 
 /**
  * Simple Log Function
  * Using Cyan Color
  * @param args
  */
-export const log = (...args: any[]) => {
+export function log(...args: any[]) {
     args.unshift("=> ");
     console.log(cyan(...args));
-};
+}
 
 /**
  * Simple Log Function
  * Using Cyan Color
  * @param args
  */
-export const logInfo = (...args: any[]) => {
+export function logInfo(...args: any[]) {
     args.unshift("=> ");
     console.log(magenta(...args));
-};
+}
 
 /**
  * Error Log Function
  * Using Red Color
  * @param args
  */
-export const logError = (...args: any[]) => {
+export function logError(...args: any[]) {
     console.error(red(...args));
-};
+}
 
 /**
  * LogError And Exit
@@ -84,23 +107,25 @@ export const logError = (...args: any[]) => {
  * logs error then exists program.
  * @param args
  */
-export const logErrorAndExit = (...args: any[]) => {
+export function logErrorAndExit(...args: any[]) {
     if (args.length) {
         args.unshift("Error: ");
         logError(...args);
     }
 
     process.exit();
-};
+}
 
 // Define Colors with bars helper function
-export const yellowWithBars = (str: string) => yellow("{" + str.trim() + "}");
+export function yellowWithBars(str: string) {
+    return yellow("{" + str.trim() + "}");
+}
 
 /**
  * Get current XjsVersion from package.json
  * @return {string}
  */
-export const currentXjsVersion = () => {
+export function currentXjsVersion(): string {
     let packageDotJson = require(basePath("package.json"));
 
     let packages = packageDotJson["dependencies"];
@@ -120,114 +145,82 @@ export const currentXjsVersion = () => {
     }
 
     return version;
-};
+}
 
 /**
  * Check if xpresser project uses yarn.
  * @return {boolean}
  * @constructor
  */
-export const HasYarnLock = () => fs.existsSync(basePath("yarn.lock"));
+export function hasYarnLock(): boolean {
+    return fs.existsSync(basePath("yarn.lock"));
+}
 
 /**
- * Update project using yarn or npm
- * @return {*}
+ * Update xpresser using yarn or npm
+ * @return {void}
  */
-export const updateXpresser = () => {
+export function updateXpresser(): void {
     let command = `npm install ${xpresserNpmId} --save --no-audit --silent`;
 
-    if (HasYarnLock()) {
+    if (!hasYarnLock()) {
         log("Using Yarn...");
         command = `yarn add ${xpresserNpmId} --silent`;
     } else {
         log("Using Npm...");
         // if NPM remove xpresser first
-        exec(`npm remove ${xpresserNpmId}`, { silent: true });
+        execSyncSilently(`npm remove ${xpresserNpmId}`);
     }
 
     console.log(white("............"));
     log("Updating....");
     console.log(white("............"));
 
-    exec(command);
+    execSyncSilently(command);
 
     console.log(white("............"));
     log(`${xpresserNpmId} updated successfully.`);
-};
+}
 
 /**
- * Get All files in a given path.
- * @param path
- * @returns {Array}
+ * get json content from file
+ * @param file
  */
-export const getAllFiles = (path: string) => {
-    let list: string[] = [];
-
-    if (fs.existsSync(path)) {
-        const files = fs.readdirSync(path);
-
-        for (const file of files) {
-            const fullPath = path + "/" + file;
-
-            if (fs.lstatSync(fullPath).isDirectory()) {
-                const folderFiles = getAllFiles(fullPath);
-                for (const folderFile of folderFiles) {
-                    list.push(folderFile);
-                }
-            } else {
-                list.push(fullPath);
-            }
-        }
-    }
-
-    return list;
-};
-
-/**
- * Loads project jobs.
- * @param {string} path
- * @deprecated
- * @return {{}}
- * */
-export const loadJobs = function (path = "") {
-    /**
-     * Defaults to 'backend/jobs'
-     * Cli assumes we are making use of the xpresser framework structure.
-     */
-    if (!path || path === "") {
-        path = basePath("backend/jobs");
-    }
-
-    const $commands: Record<string, any> = {};
-
-    const files = getAllFiles(path);
-
-    for (const file of files) {
-        const jobFile = file.replace(path, "");
-        const job = require(file);
-
-        if (typeof job !== "object") {
-            logErrorAndExit("Job: {" + jobFile + "} did not return object!");
-
-            if (job.hasOwnProperty("command") || !job.hasOwnProperty("handler")) {
-                logErrorAndExit("Job: {" + jobFile + "} is not structured properly!");
-            }
-        }
-
-        if (typeof job.schedule === "function") {
-            job.schedule = job.schedule();
-        }
-
-        if (typeof job.schedule === "string") {
-            job.path = file;
-            $commands[job.command] = job;
-        }
-    }
-
-    return $commands;
-};
-
-export const jsonFromFile = (file: string) => {
+export function jsonFromFile(file: string) {
     const json = fs.readFileSync(file).toString();
     return JSON.parse(json);
-};
+}
+
+/**
+ * Custom ExecSync Function
+ *
+ * Note: because this method returns error and result values,
+ * it runs command **silently** with stdio: "pipe" option.
+ */
+export function execSyncSilently(command: string, options: ExecSyncOptions = {}) {
+    let error: string | undefined;
+    let result: string | undefined;
+
+    try {
+        result = execSync(command, { stdio: "pipe", ...options })
+            .toString()
+            .trim();
+    } catch (e: any) {
+        if (e.stderr) error = e.stderr.toString().trim();
+        if (!error && e.stdout) error = e.stdout.toString().trim();
+        if (!error && e.message) error = e.message.toString().trim();
+        if (!error) error = "Unknown Error";
+    }
+
+    // if the result is an empty string, set to undefined
+    if (!result) result = undefined;
+
+    return { error, result };
+}
+
+/**
+ * Exec Sync Inherit
+ */
+export function execSyncAndInherit(command: string) {
+    return execSync(command, { stdio: "inherit" });
+}

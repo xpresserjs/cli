@@ -1,31 +1,30 @@
+import fs from "node:fs";
+import path from "node:path";
+import { spawn } from "node:child_process";
 import { cyan, green, white, whiteBright, yellow } from "chalk";
+import { prompt } from "inquirer";
+import { xc_docsReference, xpresserNpmId } from "./Constants";
+import _ from "object-collection/lodash";
+import Questionnaire from "./Questionaire";
+import ObjectCollection from "object-collection";
+import DefaultConfig from "../factory/use-xjs-cli.js.json";
 import {
     basePath,
     cliPath,
     currentXjsVersion,
+    execSyncAndInherit,
+    execSyncSilently,
+    isProd,
+    jsonFromFile,
     log,
     logError,
     logErrorAndExit,
+    logInfo,
+    showCommand,
     updateXpresser,
     xc_globalConfig,
     yellowWithBars
 } from "./Functions";
-
-import { prompt } from "inquirer";
-import { spawn } from "child_process";
-import { exec } from "shelljs";
-import { xc_docsReference, xpresserNpmId } from "./Constants";
-import _ from "object-collection/lodash";
-import fs = require("fs");
-import path = require("path");
-import Questionnaire = require("./Questionaire");
-import ObjectCollection = require("object-collection");
-
-/**
- * Set DefaultConfig to provide values for undefined keys.
- */
-const defaultConfig = require("../factory/use-xjs-cli.js");
-const { jsonFromFile } = require("./Functions");
 
 /**
  * List Of Commands
@@ -36,7 +35,6 @@ const commands = {
      * @param file
      */
     init(file = "xpresser.js") {
-        let lang = "js";
         const UseFile = basePath("use-xjs-cli.json");
 
         if (fs.existsSync(UseFile)) {
@@ -51,7 +49,6 @@ const commands = {
         let fileToJs = file;
 
         if (file.slice(-3) === ".ts") {
-            lang = "ts";
             jsonPath = cliPath("factory/use-xjs-cli.ts.json");
             fileToJs = file.slice(0, file.length - 3) + ".js";
         }
@@ -138,8 +135,11 @@ const commands = {
         ]).then(({ type, lang }) => {
             const projectPath = path.resolve(`./${name}`);
             if (fs.existsSync(projectPath)) {
-                logError(`Folder ${yellow(name)} already exists`);
-                return logError(`@ ${projectPath}`);
+                const files = fs.readdirSync(projectPath);
+                if (files.length > 0) {
+                    logError(`Folder ${yellow(name)} already exists and is not empty`);
+                    return logError(`@ ${projectPath}`);
+                }
             }
 
             const index = lang === "js" ? 0 : 1;
@@ -171,18 +171,21 @@ const commands = {
                 return logErrorAndExit("Invalid project type.");
             }
 
-            const command = `git  clone ${gitUrl} ${name}`;
-
-            log(command);
-            exec(command);
+            const command = `git clone ${gitUrl} ${name}`;
+            try {
+                execSyncAndInherit(command);
+            } catch (e: any) {
+                return logError(e.message);
+            }
 
             // Clear .git folder after clone
             const dotGitFolder = `${projectPath}/.git`;
 
             try {
-                fs.unlinkSync(dotGitFolder);
-                exec(`rm -rf ${dotGitFolder}`);
-            } catch {}
+                fs.rmSync(dotGitFolder, { recursive: true, force: true });
+            } catch (e: any) {
+                // do nothing
+            }
 
             console.log(white(".........."));
             console.log(
@@ -198,7 +201,7 @@ const commands = {
     },
 
     /**
-     * Checks if current project has xpresser.
+     * Checks if a current project has xpresser.
      * @param trueOrFalse
      * @param $returnData
      * @returns {void|boolean|ObjectCollection}
@@ -221,7 +224,8 @@ const commands = {
                 try {
                     let config = require(appHasXjs);
                     if (typeof config === "object") {
-                        config = _.merge(defaultConfig, config);
+                        config = _.merge(DefaultConfig, config);
+
                         // @ts-ignore
                         globalConfig = global["XjsCliConfig"] = new ObjectCollection(
                             config
@@ -261,64 +265,71 @@ const commands = {
 
         if (env === "prod" || env === "production") {
             const { start_server, main } = config.get("prod") as expectedConfig;
-
             const command = `${start_server} ${main}`;
-            const startServer = exec(command, { silent: true });
 
-            if (!startServer.stderr.trim().length) {
-                log(command);
-                log("Server started.");
-            } else {
-                logErrorAndExit(startServer.stderr);
-            }
+            const startServer = execSyncSilently(command);
+            if (startServer.error) return logErrorAndExit(startServer.error);
+
+            log("Server started.");
         } else {
             const { main, start_server: command } = config.get("dev") as expectedConfig;
-
-            exec(command.includes(main) ? command : `${command} ${main}`);
+            execSyncAndInherit(command.includes(main) ? command : `${command} ${main}`);
         }
     },
 
     /**
      * Run CLi Commands in shell
      * @param command
-     * @param isDev
      * @param fromXjsCli
      */
-    cli(command: string, isDev: boolean = true, fromXjsCli = true) {
-        command = this.cliCommand(command, isDev, fromXjsCli);
-        // @ts-ignore
-        return exec(command, null, { stdio: "inherit" });
+    cli(command: string, fromXjsCli = true): void {
+        command = this.cliCommand(command, fromXjsCli);
+
+        try {
+            execSyncAndInherit(command);
+        } catch (e: any) {
+            // do nothing
+        }
     },
 
     /**
-     * Run CLi Commands in shell
+     * Run CLi Commands in shell using spawn
      * @param command
-     * @param isDev
      */
-    cliSpawn(command: string, isDev: boolean = true) {
-        command = this.cliCommand(command, isDev);
+    cliSpawn(command: string) {
+        command = this.cliCommand(command);
+
         const $commands = command.trim().split(" ");
         const [, ...$afterFirstCommand] = $commands;
-        const $process = spawn($commands[0], $afterFirstCommand);
 
-        $process.stdout.on("data", (msg) => {
-            console.log(msg.toString().trim());
+        spawn($commands[0], $afterFirstCommand, {
+            stdio: "inherit"
         });
     },
 
     /**
      * Command generator helper.
      * @param command
-     * @param isDev
      * @param fromXjsCli
      * @returns {string}
      */
-    cliCommand(command: string, isDev: boolean = true, fromXjsCli = true) {
-        const config = xc_globalConfig()!.get(isDev ? "dev" : "prod");
+    cliCommand(command: string, fromXjsCli = true): string {
+        const config = xc_globalConfig()!.get(isProd() ? "prod" : "dev");
 
-        return `${config["start_console"]} ${config.main} cli ${command} ${
-            fromXjsCli ? "--from-xjs-cli" : ""
-        }`.trim();
+        command = `${config["start_console"]} ${config.main} cli ${command}`;
+        if (fromXjsCli) {
+            command += " --from-xjs-cli";
+        }
+
+        command = command.trim();
+
+        if (showCommand()) {
+            console.log(white(".........."));
+            console.log(green("Running: ") + white(command));
+            console.log(white(".........."));
+        }
+
+        return command;
     },
 
     /**
@@ -327,7 +338,7 @@ const commands = {
      * @param query
      * @returns {*}
      */
-    routes(search: string, query: string) {
+    routes(search: string, query: string): any {
         if (!search) search = "";
         if (!query) query = "";
 
@@ -336,26 +347,26 @@ const commands = {
 
     /**
      * Remove App from maintenance mood
-     * @returns {*}
+     * @returns {void}
      */
-    up() {
+    up(): void {
         return this.cli("up");
     },
 
     /**
      * Put App in maintenance mood
-     * @returns {*}
+     * @returns {void}
      */
-    down() {
+    down(): void {
         return this.cli("down");
     },
 
     /**
      * Make new View
      * @param name
-     * @returns {*|void}
+     * @returns {void}
      */
-    makeView(name: string) {
+    makeView(name: string): void {
         return this.cli("make:view " + name);
     },
 
@@ -363,7 +374,6 @@ const commands = {
      * Make new Controller
      * @param name
      * @param options
-     * @returns {*|void}
      */
     makeController(name: string, options: Record<string, any>) {
         let $type: string;
@@ -437,28 +447,28 @@ const commands = {
     /**
      * Make new Model
      * @param args
-     * @returns {*|void}
+     * @returns {void}
      */
-    makeModel(...args: string[]) {
+    makeModel(...args: string[]): void {
         return this.cli("make:model " + args.join(" "));
     },
 
     /**
      * Make new Middleware
      * @param name
-     * @returns {*|void}
+     * @returns {void}
      */
-    makeMiddleware(name: string) {
+    makeMiddleware(name: string): void {
         return this.cli("make:middleware " + name);
     },
 
     /**
      * Make new Job
-     * @returns {*|void}
+     * @returns {void}
      * @param name
      * @param command
      */
-    makeJob(name: string, command: string) {
+    makeJob(name: string, command: string): void {
         return this.cli(`make:job ${name} ${command}`);
     },
 
@@ -466,9 +476,9 @@ const commands = {
      * Make new Event
      * @param name
      * @param namespace
-     * @returns {*|void}
+     * @returns {void}
      */
-    makeEvent(name: string, namespace: string) {
+    makeEvent(name: string, namespace: string): void {
         if (namespace === undefined) {
             namespace = name;
         }
@@ -481,9 +491,9 @@ const commands = {
     /**
      * Run cron Job
      * @param args
-     * @returns {*|void}
+     * @returns {void}
      */
-    runJob(args: string[]) {
+    runJob(args: string[]): void {
         return this.cli("@" + args.join(" "));
     },
 
@@ -530,10 +540,14 @@ const commands = {
 
         if (build) {
             log(`Running stack ${stackKey}`);
+            logInfo(commands);
 
-            console.log("=>", commands);
-            exec(commands);
-            return log(`Stack ${stackKey} executed successfully!`);
+            try {
+                execSyncAndInherit(commands);
+                return log(`Stack ${stackKey} executed successfully!`);
+            } catch (e) {
+                return logErrorAndExit(`Stack ${stackKey} failed to execute!`);
+            }
         } else {
             console.log(commands);
         }
@@ -542,9 +556,9 @@ const commands = {
     /**
      * Run cron Job
      * @param args
-     * @returns {*|void}
+     * @returns {void}
      */
-    spawnJob(args: string[]) {
+    spawnJob(args: string[]): void {
         return this.cliSpawn("@" + args.join(" "));
     },
 
@@ -552,13 +566,13 @@ const commands = {
      * Run Cron Jobs
      * @param isProduction
      * @param from
-     * @param showObject
      */
-    cron(isProduction = false, from = undefined, showObject = false) {
+    cron(isProduction = false, from = undefined) {
         const gConfig = xc_globalConfig()!;
         const config = gConfig.path(isProduction ? "prod" : "dev");
         const jobsPath = basePath(config.get("jobs_path", "backend/jobs"));
         let cronJsPath = jobsPath + "/cron.json";
+        const isCmdFile = from === "cmd";
 
         if (!fs.existsSync(cronJsPath)) {
             // Try cron.json
@@ -582,20 +596,15 @@ const commands = {
             fs.writeFileSync(cronCmd, fs.readFileSync(cliPath("factory/cron-cmd.txt")));
         }
 
-        if (from === undefined && isProduction) {
+        if (!isCmdFile && isProduction) {
             const start_cron = gConfig.get("prod.start_cron");
-            let startCronCmd = exec(`${start_cron} cron-cmd.js`, {
-                silent: true
-            });
-            if (startCronCmd.stdout.trim().length) {
-                return log("Cron Started.");
-            }
+            let startCronCmd = execSyncSilently(`${start_cron} cron-cmd.js`);
+            if (startCronCmd.error) return logError(startCronCmd.error);
 
-            return log(startCronCmd.stderr);
+            return log("Cron Started.");
         }
 
         const spawnCron = gConfig.get("async_cron_jobs", false);
-
         if (spawnCron) log("Running Asynchronously...");
 
         for (const cronJob of cronJobs) {
@@ -624,6 +633,7 @@ const commands = {
 
             const timezone = (cronJob["timezone"] =
                 cronJob["timezone"] || process.env.TZ || "America/Los_Angeles");
+
             /**
              * Register Cron Jobs
              */
@@ -655,15 +665,15 @@ const commands = {
     },
 
     /**
-     * Check for Xpresser Update in project
+     * Check for Xpresser Update in a project
      */
     checkForUpdate() {
         log("Checking npm registry for version update...");
-        let version = exec(`npm show ${xpresserNpmId} version`, {
-            silent: true
-        }).stdout.trim();
+        const version = execSyncSilently(`npm show ${xpresserNpmId} version`);
+        if (version.error) return logErrorAndExit(version.error);
+
         let currentVersion = currentXjsVersion();
-        if (currentVersion < version) {
+        if (currentVersion < version.result!) {
             log(
                 `xpresser latest version is ${yellow(version)} but yours is ${whiteBright(
                     currentVersion
@@ -696,19 +706,19 @@ const commands = {
         if (process === "all" || process === "cron") {
             const stop_cron = xc_globalConfig()!.get("prod.stop_cron");
 
-            let stopCron = exec(`${stop_cron} cron-cmd.js`, { silent: true });
-            if (stopCron.stdout.trim().length) {
-                log("Cron Stopped.");
-            }
+            let stopCron = execSyncSilently(`${stop_cron} cron-cmd.js`);
+            if (stopCron.error) return logError(stopCron.error);
+
+            log("Cron Stopped.");
         }
 
         if (process === "all" || process === "server") {
             const stop_server = gConfig.get("prod.stop_server");
 
-            let stopServer = exec(`${stop_server} server.js`, { silent: true });
-            if (stopServer.stdout.trim().length) {
-                log("Server Stopped.");
-            }
+            let stopServer = execSyncSilently(`${stop_server} server.js`);
+            if (stopServer.error) return logError(stopServer.error);
+
+            log("Server Stopped.");
         }
     },
 
@@ -729,22 +739,22 @@ const commands = {
     },
 
     /**
-     * Publish Folders into project
+     * Publish Folders
      * @param plugin
      * @param folder
      * @param overwrite
-     * @return {*}
+     * @return {void}
      */
-    import(plugin: string, folder: string, overwrite: boolean) {
+    import(plugin: string, folder: string, overwrite: boolean): void {
         return this.cli(`import ${plugin} ${folder} ${overwrite}`.trim());
     },
 
     /**
      * Installs a plugin to your project.
      * @param $plugin
-     * @return {*|void}
+     * @return {void}
      */
-    installPlugin($plugin: string) {
+    installPlugin($plugin: string): void {
         return this.cli(`install ${$plugin}`);
     },
 
@@ -852,7 +862,7 @@ const commands = {
      * @param isProd
      * @return {Promise<void>}
      */
-    async repl(replFile: string, isProd: boolean) {
+    async repl(replFile: string, isProd: boolean): Promise<void> {
         // Modify use-xjs-cli.json
         const xjsConfigPath = basePath("use-xjs-cli.json");
         const xjsConfig = new ObjectCollection(jsonFromFile(xjsConfigPath) || {});
