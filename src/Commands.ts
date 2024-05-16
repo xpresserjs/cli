@@ -35,7 +35,6 @@ const commands = {
      * @param file
      */
     init(file = "xpresser.js") {
-        let lang = "js";
         const UseFile = basePath("use-xjs-cli.json");
 
         if (fs.existsSync(UseFile)) {
@@ -50,7 +49,6 @@ const commands = {
         let fileToJs = file;
 
         if (file.slice(-3) === ".ts") {
-            lang = "ts";
             jsonPath = cliPath("factory/use-xjs-cli.ts.json");
             fileToJs = file.slice(0, file.length - 3) + ".js";
         }
@@ -284,7 +282,7 @@ const commands = {
      * @param command
      * @param fromXjsCli
      */
-    cli(command: string, fromXjsCli = true) {
+    cli(command: string, fromXjsCli = true): void {
         command = this.cliCommand(command, fromXjsCli);
 
         try {
@@ -315,7 +313,7 @@ const commands = {
      * @param fromXjsCli
      * @returns {string}
      */
-    cliCommand(command: string, fromXjsCli = true) {
+    cliCommand(command: string, fromXjsCli = true): string {
         const config = xc_globalConfig()!.get(isProd() ? "prod" : "dev");
 
         command = `${config["start_console"]} ${config.main} cli ${command}`;
@@ -340,7 +338,7 @@ const commands = {
      * @param query
      * @returns {*}
      */
-    routes(search: string, query: string) {
+    routes(search: string, query: string): any {
         if (!search) search = "";
         if (!query) query = "";
 
@@ -349,26 +347,26 @@ const commands = {
 
     /**
      * Remove App from maintenance mood
-     * @returns {*}
+     * @returns {void}
      */
-    up() {
+    up(): void {
         return this.cli("up");
     },
 
     /**
      * Put App in maintenance mood
-     * @returns {*}
+     * @returns {void}
      */
-    down() {
+    down(): void {
         return this.cli("down");
     },
 
     /**
      * Make new View
      * @param name
-     * @returns {*|void}
+     * @returns {void}
      */
-    makeView(name: string) {
+    makeView(name: string): void {
         return this.cli("make:view " + name);
     },
 
@@ -376,7 +374,6 @@ const commands = {
      * Make new Controller
      * @param name
      * @param options
-     * @returns {*|void}
      */
     makeController(name: string, options: Record<string, any>) {
         let $type: string;
@@ -450,28 +447,28 @@ const commands = {
     /**
      * Make new Model
      * @param args
-     * @returns {*|void}
+     * @returns {void}
      */
-    makeModel(...args: string[]) {
+    makeModel(...args: string[]): void {
         return this.cli("make:model " + args.join(" "));
     },
 
     /**
      * Make new Middleware
      * @param name
-     * @returns {*|void}
+     * @returns {void}
      */
-    makeMiddleware(name: string) {
+    makeMiddleware(name: string): void {
         return this.cli("make:middleware " + name);
     },
 
     /**
      * Make new Job
-     * @returns {*|void}
+     * @returns {void}
      * @param name
      * @param command
      */
-    makeJob(name: string, command: string) {
+    makeJob(name: string, command: string): void {
         return this.cli(`make:job ${name} ${command}`);
     },
 
@@ -479,9 +476,9 @@ const commands = {
      * Make new Event
      * @param name
      * @param namespace
-     * @returns {*|void}
+     * @returns {void}
      */
-    makeEvent(name: string, namespace: string) {
+    makeEvent(name: string, namespace: string): void {
         if (namespace === undefined) {
             namespace = name;
         }
@@ -494,9 +491,9 @@ const commands = {
     /**
      * Run cron Job
      * @param args
-     * @returns {*|void}
+     * @returns {void}
      */
-    runJob(args: string[]) {
+    runJob(args: string[]): void {
         return this.cli("@" + args.join(" "));
     },
 
@@ -559,9 +556,9 @@ const commands = {
     /**
      * Run cron Job
      * @param args
-     * @returns {*|void}
+     * @returns {void}
      */
-    spawnJob(args: string[]) {
+    spawnJob(args: string[]): void {
         return this.cliSpawn("@" + args.join(" "));
     },
 
@@ -746,18 +743,18 @@ const commands = {
      * @param plugin
      * @param folder
      * @param overwrite
-     * @return {*}
+     * @return {void}
      */
-    import(plugin: string, folder: string, overwrite: boolean) {
+    import(plugin: string, folder: string, overwrite: boolean): void {
         return this.cli(`import ${plugin} ${folder} ${overwrite}`.trim());
     },
 
     /**
      * Installs a plugin to your project.
      * @param $plugin
-     * @return {*|void}
+     * @return {void}
      */
-    installPlugin($plugin: string) {
+    installPlugin($plugin: string): void {
         return this.cli(`install ${$plugin}`);
     },
 
@@ -865,7 +862,7 @@ const commands = {
      * @param isProd
      * @return {Promise<void>}
      */
-    async repl(replFile: string, isProd: boolean) {
+    async repl(replFile: string, isProd: boolean): Promise<void> {
         // Modify use-xjs-cli.json
         const xjsConfigPath = basePath("use-xjs-cli.json");
         const xjsConfig = new ObjectCollection(jsonFromFile(xjsConfigPath) || {});

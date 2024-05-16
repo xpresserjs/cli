@@ -142,7 +142,7 @@ if (!config) {
         .command("cron [from_cmd]")
         .description("Start cron registered commands.")
         .option("-o, --object", "Show job object")
-        .action((from_cmd, options) => {
+        .action((from_cmd) => {
             Commands.cron(isProd(), from_cmd);
         });
 

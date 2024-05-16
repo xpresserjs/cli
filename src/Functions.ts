@@ -22,7 +22,7 @@ export function getOption(opt: string) {
  * check if --prod is passed
  */
 export function isProd() {
-    return getOption("prod");
+    return getOption("prod") === true;
 }
 
 /**
@@ -37,9 +37,9 @@ export function showCommand() {
  *
  * Same as the current working directory.
  * @param path
- * @return {string|*}
+ * @return {string}
  */
-export function basePath(path: string = "") {
+export function basePath(path: string = ""): string {
     if (path.length) {
         return process.cwd() + "/" + path;
     }
@@ -51,7 +51,7 @@ export function basePath(path: string = "") {
  * @param length
  * @return {string}
  */
-export function makeName(length: number = 10) {
+export function makeName(length: number = 10): string {
     let result = "";
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     const charactersLength = characters.length;
@@ -68,7 +68,7 @@ export function makeName(length: number = 10) {
  * @param $path
  * @return {string}
  */
-export function cliPath($path = "") {
+export function cliPath($path = ""): string {
     return resolve(__dirname + "/../" + $path);
 }
 
@@ -125,7 +125,7 @@ export function yellowWithBars(str: string) {
  * Get current XjsVersion from package.json
  * @return {string}
  */
-export function currentXjsVersion() {
+export function currentXjsVersion(): string {
     let packageDotJson = require(basePath("package.json"));
 
     let packages = packageDotJson["dependencies"];
@@ -152,15 +152,15 @@ export function currentXjsVersion() {
  * @return {boolean}
  * @constructor
  */
-export function hasYarnLock() {
+export function hasYarnLock(): boolean {
     return fs.existsSync(basePath("yarn.lock"));
 }
 
 /**
  * Update xpresser using yarn or npm
- * @return {*}
+ * @return {void}
  */
-export function updateXpresser() {
+export function updateXpresser(): void {
     let command = `npm install ${xpresserNpmId} --save --no-audit --silent`;
 
     if (!hasYarnLock()) {
