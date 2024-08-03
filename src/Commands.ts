@@ -599,7 +599,6 @@ const commands = {
             cronJobs = cronJobs.default ?? cronJobs;
         }
 
-        console.dir({ cronJobs }, { depth: null });
         // Require Node Cron
         const { CronJob } = require("cron");
 
