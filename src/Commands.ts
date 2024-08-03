@@ -575,17 +575,31 @@ const commands = {
         const isCmdFile = from === "cmd";
 
         if (!fs.existsSync(cronJsPath)) {
-            // Try cron.json
+            // Try cron.js
             cronJsPath = jobsPath + "/cron.js";
 
             if (!fs.existsSync(cronJsPath)) {
-                return logErrorAndExit(
-                    `(cron.js/cron.json) not found in jobs directory: (${jobsPath})`
-                );
+                // try cron.ts
+                cronJsPath = jobsPath + "/cron.ts";
+
+                if (!fs.existsSync(cronJsPath)) {
+                    return logErrorAndExit(
+                        `(cron.[js|ts|json) not found in jobs directory: (${jobsPath})`
+                    );
+                }
             }
+
+            // register ts-node to require ts files
+            require("ts-node/register");
         }
 
         let cronJobs = require(cronJsPath);
+
+        if (cronJsPath.endsWith(".ts")) {
+            cronJobs = cronJobs.default ?? cronJobs;
+        }
+
+        console.dir({ cronJobs }, { depth: null });
         // Require Node Cron
         const { CronJob } = require("cron");
 
