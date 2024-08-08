@@ -594,10 +594,7 @@ const commands = {
         }
 
         let cronJobs = require(cronJsPath);
-
-        if (cronJsPath.endsWith(".ts")) {
-            cronJobs = cronJobs.default ?? cronJobs;
-        }
+        cronJobs = cronJobs.default ?? cronJobs;
 
         // Require Node Cron
         const { CronJob } = require("cron");
